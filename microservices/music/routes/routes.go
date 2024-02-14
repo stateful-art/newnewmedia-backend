@@ -7,4 +7,6 @@ import (
 
 func MusicRoutes(app fiber.Router) {
 	app.Get("/", controller.GetMusic)
+	app.Post("/", controller.CreateMusic)
+	app.Get("/file/:id", controller.GetMusicFile)
 }

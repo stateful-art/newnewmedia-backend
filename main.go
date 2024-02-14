@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	db "newnewmedia.com/db"
 	musicroute "newnewmedia.com/microservices/music/routes"
+	placesroute "newnewmedia.com/microservices/place/routes"
 )
 
 func main() {
@@ -20,12 +21,7 @@ func main() {
 	app.Use(logger.New())
 
 	app.Use(cors.New(cors.Config{
-		AllowOriginsFunc: func(origin string) bool {
-			// Check if the origin matches either of the allowed origins
-			return origin == "https://www.restorder.app" || origin == "http://localhost:5173"
-		},
-		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
+		AllowHeaders:     "Origin, Content-Type, Accept, ngrok-skip-browser-warning",
 		AllowCredentials: true,
 	}))
 
@@ -34,6 +30,9 @@ func main() {
 	})
 
 	music := app.Group("/music")
+	places := app.Group("/places")
+
+	placesroute.PlaceRoutes(places)
 	musicroute.MusicRoutes(music)
 
 	log.Fatal(app.Listen(":3000"))
