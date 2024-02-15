@@ -31,3 +31,15 @@ func CreateMusic(c *fiber.Ctx, music dto.Music) error {
 	}
 	return nil
 }
+
+func GetMusicByPlace(c *fiber.Ctx, id string) ([]dao.Music, error) {
+	placeObjID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	music, err := repository.GetMusicByPlace(c, &placeObjID)
+	if err != nil {
+		return nil, err
+	}
+	return music, nil
+}

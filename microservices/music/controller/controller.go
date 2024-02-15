@@ -43,3 +43,17 @@ func CreateMusic(c *fiber.Ctx) error {
 	})
 
 }
+
+func GetMusicByPlace(c *fiber.Ctx) error {
+	id := c.Params("id")
+	music, err := service.GetMusicByPlace(c, id)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+	return c.JSON(fiber.Map{
+		"message": "Music fetched successfully",
+		"data":    music,
+	})
+}
