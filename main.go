@@ -10,6 +10,7 @@ import (
 	db "newnewmedia.com/db"
 	musicroute "newnewmedia.com/microservices/music/routes"
 	placesroute "newnewmedia.com/microservices/place/routes"
+	playlistroute "newnewmedia.com/microservices/playlist/routes"
 )
 
 func main() {
@@ -23,7 +24,6 @@ func main() {
 		AllowOriginsFunc: func(origin string) bool {
 			return origin == "https://www.newnewmedia.com" || origin == "http://localhost:5173"
 		},
-		AllowOrigins:     "http://localhost",
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
 		AllowCredentials: true,
@@ -36,9 +36,11 @@ func main() {
 
 	music := app.Group("/music")
 	places := app.Group("/places")
+	playlists := app.Group("/playlists")
 
 	placesroute.PlaceRoutes(places)
 	musicroute.MusicRoutes(music)
+	playlistroute.PlaceRoutes(playlists)
 
 	log.Fatal(app.Listen(":3000"))
 }
