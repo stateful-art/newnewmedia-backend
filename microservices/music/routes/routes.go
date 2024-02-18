@@ -10,4 +10,5 @@ func MusicRoutes(app fiber.Router) {
 	app.Post("/", controller.CreateMusic)
 	app.Get("/place/:id", controller.GetMusicByPlace)
 	app.Get("/file/:id", controller.GetMusicFile)
+	app.Get("/play", controller.PlayMusic)
 }

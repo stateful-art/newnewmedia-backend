@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
 
+	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -12,6 +15,25 @@ import (
 	placesroute "newnewmedia.com/microservices/place/routes"
 	playlistroute "newnewmedia.com/microservices/playlist/routes"
 )
+
+var storageClient *storage.Client // Global variable to hold the GCS client instance
+func init() {
+	// Initialize the GCS client during application startup
+
+	// Set the path to your credentials file
+	credentialsFile := "./creds/creds.json"
+
+	// Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", credentialsFile)
+
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Println("Failed to initialize GCS client:", err)
+		os.Exit(1)
+	}
+	storageClient = client
+}
 
 func main() {
 	if err := godotenv.Load(); err != nil {
