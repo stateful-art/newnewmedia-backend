@@ -18,6 +18,7 @@ import (
 )
 
 var storageClient *storage.Client // Global variable to hold the GCS client instance
+
 func init() {
 	// Initialize the GCS client during application startup
 

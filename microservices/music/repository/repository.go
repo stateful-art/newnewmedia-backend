@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -32,25 +33,19 @@ func GetMusicByPlace(id *primitive.ObjectID) ([]dao.Music, error) {
 	return music, nil
 }
 
-func GetMusicById(id *primitive.ObjectID) (dao.Music, error) {
+func GetMusicById(id primitive.ObjectID) (dao.Music, error) {
 	var music dao.Music
-
+	log.Println(id)
 	// Define the filter to find music by ID
 	filter := bson.M{"_id": id}
 
 	// Execute the query to find music documents
-	cursor, err := collections.MusicCollection.Find(context.Background(), filter)
+	err := collections.MusicCollection.FindOne(context.Background(), filter).Decode(&music)
 	if err != nil {
 		return music, err
 	}
-	defer cursor.Close(context.Background())
 
-	// Decode the first document from the cursor into the music object
-	if cursor.Next(context.Background()) {
-		if err := cursor.Decode(&music); err != nil {
-			return music, err
-		}
-	}
+	log.Println(music)
 
 	return music, nil
 }

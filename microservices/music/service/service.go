@@ -25,7 +25,7 @@ func GetAudioFilePath(songID string) (string, error) {
 	}
 
 	// Fetch the music details from the database based on the converted song ID
-	music, err := repository.GetMusicById(&objectID)
+	music, err := repository.GetMusicById(objectID)
 	if err != nil {
 		return "", err
 	}

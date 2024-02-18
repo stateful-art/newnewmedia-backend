@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,19 +28,25 @@ func PlayMusic(c *fiber.Ctx) error {
 	// Fetch the audio file path for the given song ID
 	audioFilePath, err := service.GetAudioFilePath(songID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to fetch audio file path")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": err.Error(),
+		})
 	}
-
+	log.Println(audioFilePath)
 	// Extract bucketName and objectName from audioFilePath
 	bucketName, objectName, err := extractBucketAndObjectName(audioFilePath)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to extract bucketName and objectName")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": err.Error(),
+		})
 	}
 
 	// Stream the audio file
 	err = service.StreamMusic(c, bucketName, objectName)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to stream the audio file")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": err.Error(),
+		})
 	}
 
 	return nil
@@ -94,6 +101,7 @@ func GetMusicByPlace(c *fiber.Ctx) error {
 func extractBucketAndObjectName(audioFilePath string) (string, string, error) {
 	// Split audioFilePath into bucketName and objectName
 	// Example: audioFilePath = "gs://your-bucket-name/your-object-name.mp3"
+	log.Println(audioFilePath)
 	parts := strings.SplitN(audioFilePath, "/", 4)
 	if len(parts) < 4 || parts[0] != "gs:" {
 		return "", "", errors.New("invalid audioFilePath")
