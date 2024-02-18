@@ -11,6 +11,7 @@ import (
 )
 
 func CreateMusic(music dao.Music) error {
+
 	_, err := collections.MusicCollection.InsertOne(context.Background(), music)
 	if err != nil {
 		return err

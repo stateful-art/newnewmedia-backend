@@ -17,11 +17,10 @@ import (
 	playlistroute "newnewmedia.com/microservices/playlist/routes"
 )
 
-var storageClient *storage.Client // Global variable to hold the GCS client instance
+var StorageClient *storage.Client // Global variable to hold the GCS client instance
 
+// Initialize the GCS client during application startup
 func init() {
-	// Initialize the GCS client during application startup
-
 	// Set the path to your credentials file
 	credentialsFile := filepath.FromSlash("creds/creds.json")
 
@@ -34,7 +33,8 @@ func init() {
 		log.Println("Failed to initialize GCS client:", err)
 		os.Exit(1)
 	}
-	storageClient = client
+	StorageClient = client
+	log.Println("Initialised google cloud storage client")
 }
 
 func main() {
@@ -63,7 +63,7 @@ func main() {
 	playlists := app.Group("/playlists")
 
 	placesroute.PlaceRoutes(places)
-	musicroute.MusicRoutes(music)
+	musicroute.MusicRoutes(music, StorageClient)
 	playlistroute.PlaceRoutes(playlists)
 
 	log.Fatal(app.Listen(":3000"))

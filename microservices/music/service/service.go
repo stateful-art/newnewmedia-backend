@@ -14,8 +14,6 @@ import (
 	repository "newnewmedia.com/microservices/music/repository"
 )
 
-var storageClient *storage.Client // Global variable to hold the GCS client instance
-
 // GetAudioFilePath retrieves the audio file path based on song ID
 func GetAudioFilePath(songID string) (string, error) {
 	// Convert the songID string to a primitive.ObjectID
@@ -46,7 +44,7 @@ func GetMusicByPlace(id string) ([]dao.Music, error) {
 	return music, nil
 }
 
-func CreateMusic(c *fiber.Ctx, musicPayload dto.Music, audioFile *multipart.FileHeader) error {
+func CreateMusic(c *fiber.Ctx, musicPayload dto.Music, audioFile *multipart.FileHeader, storageClient *storage.Client) error {
 	// Validate if the music payload contains the necessary fields
 	if musicPayload.Name == "" || musicPayload.Artist == "" {
 		return fmt.Errorf("Name and Artist are required")
@@ -62,10 +60,9 @@ func CreateMusic(c *fiber.Ctx, musicPayload dto.Music, audioFile *multipart.File
 	// Store the music file in Google Cloud Storage
 	storageBucket := "n2media-music"
 	objectName := fmt.Sprintf("%s.mp3", primitive.NewObjectID().Hex()) // Generate a unique object name
-	if err := storeMusicFileInGCS(c.Context(), storageBucket, objectName, audioFileContent); err != nil {
+	if err := storeMusicFileInGCS(c.Context(), storageBucket, objectName, audioFileContent, storageClient); err != nil {
 		return err
 	}
-
 	// Store the music details in MongoDB
 	music := dao.Music{
 		Name:   musicPayload.Name,
@@ -82,57 +79,23 @@ func CreateMusic(c *fiber.Ctx, musicPayload dto.Music, audioFile *multipart.File
 }
 
 // storeMusicFileInGCS stores the music file in Google Cloud Storage
-func storeMusicFileInGCS(ctx context.Context, bucketName, objectName string, audioFile io.Reader) error {
+func storeMusicFileInGCS(ctx context.Context, bucketName, objectName string, audioFile io.Reader, storageClient *storage.Client) error {
 	// Create a new GCS client
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return err
-	}
-	defer client.Close()
 
 	// Create a GCS object writer
-	wc := client.Bucket(bucketName).Object(objectName).NewWriter(ctx)
-	defer wc.Close()
+	writer := storageClient.Bucket(bucketName).Object(objectName).NewWriter(ctx)
+	defer writer.Close()
 
 	// Copy the file data to the GCS object writer
-	if _, err := io.Copy(wc, audioFile); err != nil {
+	if _, err := io.Copy(writer, audioFile); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// func storeMusicFileInGCS(bucketName, objectName string, audioFile *fiber.File) error {
-// 	ctx := context.Background()
-
-// 	// Create a new GCS client
-// 	client, err := storage.NewClient(ctx)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer client.Close()
-
-// 	// Open the file for reading
-// 	file, err := audioFile.Open()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
-
-// 	// Create a GCS object writer
-// 	wc := client.Bucket(bucketName).Object(objectName).NewWriter(ctx)
-// 	defer wc.Close()
-
-// 	// Copy the file data to the GCS object writer
-// 	if _, err := io.Copy(wc, file); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
 // StreamMusic streams the audio file from Google Cloud Storage to the client
-func StreamMusic(c *fiber.Ctx, bucketName, objectName string) error {
+func StreamMusic(c *fiber.Ctx, bucketName, objectName string, storageClient *storage.Client) error {
 	ctx := context.Background()
 
 	// Create a new reader to read the streamed data from Google Cloud Storage

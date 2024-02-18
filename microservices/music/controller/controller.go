@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
 	dto "newnewmedia.com/microservices/music/dto"
 	service "newnewmedia.com/microservices/music/service"
@@ -21,7 +22,7 @@ func GetMusicFile(c *fiber.Ctx) error {
 }
 
 // PlayMusic streams the audio file based on song ID
-func PlayMusic(c *fiber.Ctx) error {
+func PlayMusic(c *fiber.Ctx, storageClient *storage.Client) error {
 	// Get the song ID from the request parameters
 	songID := c.Params("id")
 
@@ -42,7 +43,7 @@ func PlayMusic(c *fiber.Ctx) error {
 	}
 
 	// Stream the audio file
-	err = service.StreamMusic(c, bucketName, objectName)
+	err = service.StreamMusic(c, bucketName, objectName, storageClient)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": err.Error(),
@@ -52,7 +53,7 @@ func PlayMusic(c *fiber.Ctx) error {
 	return nil
 }
 
-func CreateMusic(c *fiber.Ctx) error {
+func CreateMusic(c *fiber.Ctx, storageClient *storage.Client) error {
 	var musicPayload dto.Music
 
 	// Parse the request body into musicPayload
@@ -71,7 +72,7 @@ func CreateMusic(c *fiber.Ctx) error {
 	}
 
 	// Create music entry and store the music file
-	err = service.CreateMusic(c, musicPayload, audioFile)
+	err = service.CreateMusic(c, musicPayload, audioFile, storageClient)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"message": err.Error(),
