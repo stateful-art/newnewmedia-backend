@@ -13,6 +13,7 @@ import (
 	db "newnewmedia.com/db"
 	musicroute "newnewmedia.com/microservices/music/routes"
 	placesroute "newnewmedia.com/microservices/place/routes"
+	playlistroute "newnewmedia.com/microservices/playlist/routes"
 )
 
 var storageClient *storage.Client // Global variable to hold the GCS client instance
@@ -42,6 +43,9 @@ func main() {
 	db.ConnectDB()
 
 	app.Use(cors.New(cors.Config{
+		AllowOriginsFunc: func(origin string) bool {
+			return origin == "https://www.newnewmedia.com" || origin == "http://localhost:5173"
+		},
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
 		AllowCredentials: true,
@@ -54,9 +58,11 @@ func main() {
 
 	music := app.Group("/music")
 	places := app.Group("/places")
+	playlists := app.Group("/playlists")
 
 	placesroute.PlaceRoutes(places)
 	musicroute.MusicRoutes(music)
+	playlistroute.PlaceRoutes(playlists)
 
 	log.Fatal(app.Listen(":3000"))
 }

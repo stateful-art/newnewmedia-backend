@@ -5,7 +5,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	collections "newnewmedia.com/db/Collections"
+	collections "newnewmedia.com/db/collections"
 	dao "newnewmedia.com/microservices/music/dao"
 )
 
