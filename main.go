@@ -22,7 +22,7 @@ func init() {
 	// Initialize the GCS client during application startup
 
 	// Set the path to your credentials file
-	credentialsFile := filepath.FromSlash("./creds/creds.json")
+	credentialsFile := filepath.FromSlash("creds/creds.json")
 
 	// Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", credentialsFile)

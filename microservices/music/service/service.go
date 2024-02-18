@@ -16,16 +16,6 @@ import (
 
 var storageClient *storage.Client // Global variable to hold the GCS client instance
 
-func init() {
-	// Initialize the GCS client during application startup
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		panic(fmt.Errorf("failed to initialize GCS client: %v", err))
-	}
-	storageClient = client
-}
-
 // GetAudioFilePath retrieves the audio file path based on song ID
 func GetAudioFilePath(songID string) (string, error) {
 	// Convert the songID string to a primitive.ObjectID
