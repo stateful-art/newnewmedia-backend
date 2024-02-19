@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  nginx-proxyy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"   # HTTP traffic
+      - "443:443"   # HTTPS traffic
+    volumes:
+      - conf:/etc/nginx/conf.d
+      - vhost:/etc/nginx/vhost.d  # Add this line to map the vhost.d directory
+      - html:/usr/share/nginx/html
+      - dhparam:/etc/nginx/dhparam
+      - certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxy
+    restart: always
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    depends_on:
+      - nginx-proxyy
+    volumes_from:
+      - nginx-proxyy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - html:/usr/share/nginx/html
+    restart: always
+
+  backend_fiber:
+    image: golang:1.21.0-alpine
+    build: .
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=${VIRTUAL_HOST}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    expose:
+      - "3000"
+    networks:
+      - proxy
+
+volumes:
+  conf:
+  vhost:  # Add this volume definition for vhost.d
+  html:
+  dhparam:
+  certs:
+
+networks:
+  proxy:
+    external:
+      name: nginx-proxyy
