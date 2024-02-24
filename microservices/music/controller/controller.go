@@ -11,14 +11,21 @@ import (
 	service "newnewmedia.com/microservices/music/service"
 )
 
-// GetMusic gets all music
-func GetMusic(c *fiber.Ctx) error {
-	return c.SendFile("./public/music/test.mp3")
-}
+func GetSong(c *fiber.Ctx, storageClient *storage.Client) (dto.MusicRetrieve, error) {
+	songID := c.Params("id")
+	log.Print(songID)
 
-func GetMusicFile(c *fiber.Ctx) error {
-	fileName := c.Params("id")
-	return c.SendFile("./public/music/" + fileName)
+	// Fetch the audio file path for the given song ID
+	song, err := service.GetSong(songID)
+	if err != nil {
+		return dto.MusicRetrieve{}, err
+	}
+
+	// Return the song details as JSON
+	c.JSON(song)
+
+	// Since we've already sent the response, return an empty DTO and nil error
+	return dto.MusicRetrieve{}, nil
 }
 
 // PlayMusic streams the audio file based on song ID
@@ -54,7 +61,7 @@ func PlayMusic(c *fiber.Ctx, storageClient *storage.Client) error {
 }
 
 func CreateMusic(c *fiber.Ctx, storageClient *storage.Client) error {
-	var musicPayload dto.Music
+	var musicPayload dto.MusicCreate
 
 	// Parse the request body into musicPayload
 	if err := c.BodyParser(&musicPayload); err != nil {

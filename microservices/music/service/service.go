@@ -32,6 +32,30 @@ func GetAudioFilePath(songID string) (string, error) {
 	return music.Path, nil
 }
 
+func GetSong(songID string) (dto.MusicRetrieve, error) {
+	objectID, err := primitive.ObjectIDFromHex(songID)
+	if err != nil {
+		return dto.MusicRetrieve{}, fmt.Errorf("invalid song ID: %v", err)
+	}
+
+	// Fetch the music details from the database based on the converted song ID
+	dao, err := repository.GetMusicById(objectID)
+	if err != nil {
+		return dto.MusicRetrieve{}, err
+	}
+
+	// Create a DTO instance
+	song := dto.MusicRetrieve{
+		ID:     dao.ID,
+		Name:   dao.Name,
+		Artist: dao.Artist,
+		Path:   dao.Path,
+	}
+
+	// Return the audio file path
+	return song, nil
+}
+
 func GetMusicByPlace(id string) ([]dao.Music, error) {
 	placeObjID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -44,7 +68,7 @@ func GetMusicByPlace(id string) ([]dao.Music, error) {
 	return music, nil
 }
 
-func CreateMusic(c *fiber.Ctx, musicPayload dto.Music, audioFile *multipart.FileHeader, storageClient *storage.Client) error {
+func CreateMusic(c *fiber.Ctx, musicPayload dto.MusicCreate, audioFile *multipart.FileHeader, storageClient *storage.Client) error {
 	// Validate if the music payload contains the necessary fields
 	if musicPayload.Name == "" || musicPayload.Artist == "" {
 		return fmt.Errorf("Name and Artist are required")
