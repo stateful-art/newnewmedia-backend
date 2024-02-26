@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	service "newnewmedia.com/microservices/auth/service" // Import your service package
 )
@@ -12,6 +15,7 @@ func SpotifyLogin(c *fiber.Ctx) error {
 		// Handle error
 		return err
 	}
+	log.Print(authURL)
 	return c.Redirect(authURL)
 }
 
@@ -22,10 +26,11 @@ func SpotifyCallback(c *fiber.Ctx) error {
 		// Handle error
 		return fiber.ErrBadRequest
 	}
-	err := service.HandleSpotifyCallback(code)
+	spotifyToken, err := service.HandleSpotifyCallback(c, code)
 	if err != nil {
 		// Handle error
 		return err
 	}
-	return c.SendString("Spotify authentication successful!")
+	response := fmt.Sprintf("Spotify authentication successful! User's access token: %s", spotifyToken.AccessToken)
+	return c.SendString(response)
 }

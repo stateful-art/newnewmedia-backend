@@ -7,6 +7,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
+	"golang.org/x/oauth2"
 	dto "newnewmedia.com/microservices/music/dto"
 	service "newnewmedia.com/microservices/music/service"
 )
@@ -115,4 +116,75 @@ func extractBucketAndObjectName(audioFilePath string) (string, string, error) {
 		return "", "", errors.New("invalid audioFilePath")
 	}
 	return parts[2], parts[3], nil
+}
+
+// SPOTIFY RELATED ENDPOINTS
+// RecentlyPlayedSongs retrieves the user's recently played songs
+func RecentlyPlayedSongs(c *fiber.Ctx) error {
+
+	// accessToken := c.Get("x-spotify-token")
+	// if accessToken == "" {
+	// 	// Handle the case where the access token is not provided in the header
+	// 	return fiber.NewError(fiber.StatusBadRequest, "Access token not provided")
+	// }
+
+	// Convert the access token to an oauth2.Token struct
+	// token := &oauth2.Token{
+	// 	AccessToken: accessToken,
+	// }
+
+	// // Set the token in the Fiber context
+	// c.Locals("oauth_token", token)
+
+	token, err := getOauthFromHeader(c)
+	// token := c.Locals("access_token").(*oauth2.Token)
+	tracks, err := service.FetchRecentlyPlayedSongs(token)
+	if err != nil {
+		// Handle error
+		return err
+	}
+	return c.JSON(tracks)
+}
+
+// UserPlaylists retrieves the user's playlists
+func UserPlaylists(c *fiber.Ctx) error {
+	token, err := getOauthFromHeader(c)
+
+	playlists, err := service.FetchUserPlaylists(token)
+	if err != nil {
+		// Handle error
+		return err
+	}
+	return c.JSON(playlists)
+}
+
+// GenreAnalysis generates genre analysis based on the user's listening history
+func GenreAnalysis(c *fiber.Ctx) error {
+	// Retrieve user's access token from the context
+	token, err := getOauthFromHeader(c)
+
+	// Fetch user's recently played tracks from Spotify
+	tracks, err := service.FetchRecentlyPlayedSongs(token)
+	if err != nil {
+		// Handle error
+		return err
+	}
+
+	// Generate genre analysis based on the user's listening history
+	genreAnalysis := service.GenerateGenreAnalysis(tracks, token)
+	return c.JSON(fiber.Map{"genreAnalysis": genreAnalysis})
+}
+
+// getSpotifyAccessToken retrieves the Spotify access token from the request headers
+func getOauthFromHeader(c *fiber.Ctx) (*oauth2.Token, error) {
+	accessToken := c.Get("x-spotify-token")
+	if accessToken == "" {
+		return nil, fiber.NewError(fiber.StatusBadRequest, "Access token not provided")
+	}
+
+	token := &oauth2.Token{
+		AccessToken: accessToken,
+	}
+
+	return token, nil
 }

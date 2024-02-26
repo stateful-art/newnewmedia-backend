@@ -22,4 +22,9 @@ func MusicRoutes(app fiber.Router, storageClient *storage.Client) {
 		return err
 	})
 
+	// SPOTIFY RELATED ROUTES
+	app.Get("/spotify/playlists", controller.UserPlaylists)
+	app.Get("/spotify/recently-played-songs", controller.RecentlyPlayedSongs)
+	app.Get("/spotify/genre-analysis", controller.GenreAnalysis)
+
 }
