@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"cloud.google.com/go/storage"
+	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -19,7 +20,7 @@ import (
 )
 
 var StorageClient *storage.Client // Global variable to hold the GCS client instance
-
+var RedisClient *redis.Client     // Global variable to hold the Redis client instance
 // Initialize the GCS client during application startup
 func init() {
 	// Set the path to your credentials file
@@ -36,6 +37,18 @@ func init() {
 	}
 	StorageClient = client
 	log.Println("Initialised google cloud storage client")
+
+	// Initialize Redis client
+	RedisClient = redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_ADDRESS"), // Redis address
+		Password: "",                         // Redis password, if any
+		DB:       0,                          // Redis database index
+	})
+	if err := RedisClient.Ping(ctx).Err(); err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+	log.Println("Connected to Redis")
+
 }
 
 func main() {
