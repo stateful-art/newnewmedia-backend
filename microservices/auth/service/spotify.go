@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 	"os"
 	"time"
 
@@ -45,6 +43,7 @@ func ConnectSpotify() (string, error) {
 	spotifyConfig := spotifyOAuthConfig()
 	// Generate authorization URL
 	authURL := spotifyConfig.AuthCodeURL("state", oauth2.AccessTypeOffline)
+
 	return authURL, nil
 }
 
@@ -94,10 +93,6 @@ func HandleSpotifyCallback(c *fiber.Ctx, code string) (*SpotifyToken, error) {
 		return nil, err
 	}
 
-	// Log the token
-	log.Println("access_token in spotify callback")
-	log.Println(token)
-
 	// Calculate the expiration time in seconds
 	expiresIn := int64(time.Until(token.Expiry).Seconds())
 
@@ -107,14 +102,6 @@ func HandleSpotifyCallback(c *fiber.Ctx, code string) (*SpotifyToken, error) {
 		ExpiresIn:    expiresIn,
 		RefreshToken: token.RefreshToken,
 	}
-	// Convert the SpotifyToken struct to JSON
-	spotifyTokenJSON, err := json.Marshal(spotifyToken)
-	if err != nil {
-		return nil, err
-	}
-
-	// Log the JSON representation of the SpotifyToken
-	log.Println("SpotifyToken JSON:", string(spotifyTokenJSON))
 
 	return spotifyToken, nil
 }

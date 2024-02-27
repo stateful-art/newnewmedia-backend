@@ -136,7 +136,7 @@ func RecentlyPlayedSongs(c *fiber.Ctx) error {
 	// // Set the token in the Fiber context
 	// c.Locals("oauth_token", token)
 
-	token, err := getOauthFromHeader(c)
+	token, _ := getOauthFromHeader(c)
 	// token := c.Locals("access_token").(*oauth2.Token)
 	tracks, err := service.FetchRecentlyPlayedSongs(token)
 	if err != nil {
@@ -161,8 +161,11 @@ func UserPlaylists(c *fiber.Ctx) error {
 // GenreAnalysis generates genre analysis based on the user's listening history
 func GenreAnalysis(c *fiber.Ctx) error {
 	// Retrieve user's access token from the context
-	token, err := getOauthFromHeader(c)
+	token, xerr := getOauthFromHeader(c)
 
+	if xerr != nil {
+		return xerr
+	}
 	// Fetch user's recently played tracks from Spotify
 	tracks, err := service.FetchRecentlyPlayedSongs(token)
 	if err != nil {
