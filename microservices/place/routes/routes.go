@@ -1,4 +1,4 @@
-package productroutes
+package placeroutes
 
 import (
 	"github.com/gofiber/fiber/v2"

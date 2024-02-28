@@ -8,7 +8,9 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
+	"github.com/zmb3/spotify"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/oauth2"
 	"newnewmedia.com/microservices/music/dao"
 	"newnewmedia.com/microservices/music/dto"
 	repository "newnewmedia.com/microservices/music/repository"
@@ -32,6 +34,30 @@ func GetAudioFilePath(songID string) (string, error) {
 	return music.Path, nil
 }
 
+func GetSong(songID string) (dto.MusicRetrieve, error) {
+	objectID, err := primitive.ObjectIDFromHex(songID)
+	if err != nil {
+		return dto.MusicRetrieve{}, fmt.Errorf("invalid song ID: %v", err)
+	}
+
+	// Fetch the music details from the database based on the converted song ID
+	dao, err := repository.GetMusicById(objectID)
+	if err != nil {
+		return dto.MusicRetrieve{}, err
+	}
+
+	// Create a DTO instance
+	song := dto.MusicRetrieve{
+		ID:     dao.ID,
+		Name:   dao.Name,
+		Artist: dao.Artist,
+		Path:   dao.Path,
+	}
+
+	// Return the audio file path
+	return song, nil
+}
+
 func GetMusicByPlace(id string) ([]dao.Music, error) {
 	placeObjID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -44,7 +70,7 @@ func GetMusicByPlace(id string) ([]dao.Music, error) {
 	return music, nil
 }
 
-func CreateMusic(c *fiber.Ctx, musicPayload dto.Music, audioFile *multipart.FileHeader, storageClient *storage.Client) error {
+func CreateMusic(c *fiber.Ctx, musicPayload dto.MusicCreate, audioFile *multipart.FileHeader, storageClient *storage.Client) error {
 	// Validate if the music payload contains the necessary fields
 	if musicPayload.Name == "" || musicPayload.Artist == "" {
 		return fmt.Errorf("Name and Artist are required")
@@ -115,4 +141,79 @@ func StreamMusic(c *fiber.Ctx, bucketName, objectName string, storageClient *sto
 	}
 
 	return nil
+}
+
+// FetchRecentlyPlayedSongs fetches the user's recently played songs.
+func FetchRecentlyPlayedSongs(token *oauth2.Token) ([]spotify.RecentlyPlayedItem, error) {
+	// Create Spotify client with the obtained access token
+	client := spotify.NewAuthenticator("").NewClient(token)
+
+	// Retrieve user's recently played tracks
+	tracks, err := client.PlayerRecentlyPlayed()
+	if err != nil {
+		return nil, err
+	}
+
+	return tracks, nil
+}
+
+// FetchUserPlaylists fetches the user's playlists.
+func FetchUserPlaylists(token *oauth2.Token) ([]spotify.SimplePlaylist, error) {
+	// Create Spotify client with the obtained access token
+	client := spotify.NewAuthenticator("").NewClient(token)
+
+	// Retrieve user's playlists
+	playlists, err := client.CurrentUsersPlaylists()
+	if err != nil {
+		return nil, err
+	}
+
+	return playlists.Playlists, nil
+}
+
+// GenerateGenreAnalysis generates genre analysis based on the user's listening history on spotify.
+//
+//	genreStats := map[string]int{
+//	    "rock":    10,
+//	    "pop":     5,
+//	    "jazz":    3,
+//	    // Other genres...
+//	}
+
+func GenerateGenreAnalysis(tracks []spotify.RecentlyPlayedItem, token *oauth2.Token) map[string]int {
+	genreStats := make(map[string]int)
+
+	// Iterate through each recently played track
+	for _, track := range tracks {
+		// Fetch detailed information about the track's artists
+		for _, artist := range track.Track.Artists {
+			// Fetch genres for the artist
+			artistInfo, err := fetchArtistInfo(token, string(artist.ID))
+			if err != nil {
+				// Log or handle error
+				continue
+			}
+
+			// Increment genre count for each genre of the artist
+			for _, genre := range artistInfo.Genres {
+				genreStats[genre]++
+			}
+		}
+	}
+
+	return genreStats
+}
+
+// fetchArtistInfo retrieves detailed information about an artist from the Spotify API,
+// including genres.
+func fetchArtistInfo(token *oauth2.Token, artistID string) (*spotify.FullArtist, error) {
+	client := spotify.NewAuthenticator("").NewClient(token)
+
+	// Make a request to the Spotify API to fetch detailed information about the artist
+	// using the artistID.
+	artist, err := client.GetArtist(spotify.ID(artistID))
+	if err != nil {
+		return nil, err
+	}
+	return artist, nil
 }
