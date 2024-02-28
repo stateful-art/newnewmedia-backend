@@ -59,16 +59,14 @@ func main() {
 	db.ConnectDB()
 
 	app.Use(cors.New(cors.Config{
-		// AllowOriginsFunc: func(origin string) bool {
-		// 	return origin == "https://www.newnewmedia.com" || origin == "http://localhost:5173"
-		// },
+		AllowOriginsFunc: func(origin string) bool {
+			return origin == "https://www.newnew.media/" || origin == "http://localhost:5173/"
+		},
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
 		AllowCredentials: true,
-		AllowOrigins:     "*",
 	}))
 	app.Use(logger.New())
-
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
 	})
