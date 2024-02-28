@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 
 	"cloud.google.com/go/storage"
-	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	db "newnewmedia.com/db"
 	authroute "newnewmedia.com/microservices/auth/routes"
 	musicroute "newnewmedia.com/microservices/music/routes"
@@ -19,8 +19,8 @@ import (
 	playlistroute "newnewmedia.com/microservices/playlist/routes"
 )
 
-var StorageClient *storage.Client // Global variable to hold the GCS client instance
-var RedisClient *redis.Client     // Global variable to hold the Redis client instance
+var StorageClient *storage.Client    // Global variable to hold the GCS client instance
+var RedisClient *redis.ClusterClient // Global variable to hold the Redis client instance
 // Initialize the GCS client during application startup
 func init() {
 	// Set the path to your credentials file
@@ -37,18 +37,30 @@ func init() {
 	}
 	StorageClient = client
 	log.Println("Initialised google cloud storage client")
+	// Initialize Redis cluster client
+	// RedisClient = redis.NewClusterClient(&redis.ClusterOptions{
+	// 	Addrs: []string{":7000", ":7001", ":7002", ":7003", ":7004", ":7005"}, // Redis cluster nodes addresses
+	// })
 
-	// Initialize Redis client
-	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_ADDRESS"), // Redis address
-		Password: "",                         // Redis password, if any
-		DB:       0,                          // Redis database index
+	RedisClient = redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs: []string{
+			"192.168.215.2:7000",
+			"192.168.215.3:7001",
+			"192.168.215.4:7002",
+			"192.168.215.5:7003",
+			"192.168.215.6:7004",
+			"192.168.215.7:7005",
+		},
 	})
-	if err := RedisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
-	}
-	log.Println("Connected to Redis")
 
+	// Create a context
+	ctx = context.Background()
+
+	// Ping Redis cluster to check the connection
+	if err := RedisClient.Ping(ctx).Err(); err != nil {
+		log.Fatalf("Failed to connect to Redis cluster: %v", err)
+	}
+	log.Println("Connected to Redis cluster")
 }
 
 func main() {
@@ -76,7 +88,7 @@ func main() {
 	places := app.Group("/places")
 	playlists := app.Group("/playlists")
 
-	authroute.AuthRoutes(auth, StorageClient)
+	authroute.AuthRoutes(auth, StorageClient, RedisClient)
 	placesroute.PlaceRoutes(places)
 	musicroute.MusicRoutes(music, StorageClient)
 	playlistroute.PlaceRoutes(playlists)

@@ -23,6 +23,7 @@ type SpotifyToken struct {
 	AccessToken  string `json:"access_token"`
 	ExpiresIn    int64  `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
+	SpotifyID    string `json:"spotify_id"`
 }
 
 func spotifyOAuthConfig() *oauth2.Config {
@@ -93,6 +94,16 @@ func HandleSpotifyCallback(c *fiber.Ctx, code string) (*SpotifyToken, error) {
 		return nil, err
 	}
 
+	// Create Spotify client with the obtained access token
+	client := spotifyConfig.Client(context.Background(), token)
+	spotifyClient := spotify.NewClient(client)
+
+	// Retrieve user's Spotify ID
+	user, err := spotifyClient.CurrentUser()
+	if err != nil {
+		return nil, err
+	}
+
 	// Calculate the expiration time in seconds
 	expiresIn := int64(time.Until(token.Expiry).Seconds())
 
@@ -101,6 +112,7 @@ func HandleSpotifyCallback(c *fiber.Ctx, code string) (*SpotifyToken, error) {
 		AccessToken:  token.AccessToken,
 		ExpiresIn:    expiresIn,
 		RefreshToken: token.RefreshToken,
+		SpotifyID:    user.ID,
 	}
 
 	return spotifyToken, nil
