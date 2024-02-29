@@ -45,7 +45,7 @@ if ! docker network inspect nginx-proxyy &>/dev/null; then
 fi
 
 # Write the Redis cluster nodes to the .env file
-echo "REDIS_CLUSTER_NODES=$NODES" > .env
+echo "REDIS_CLUSTER_NODES=$NODES" >> .env
 
 # Start the Docker Compose stack
 docker-compose up -d
