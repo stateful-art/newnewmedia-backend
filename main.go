@@ -75,7 +75,7 @@ func main() {
 			return origin == "https://www.newnew.media/" || origin == "http://localhost:5173/"
 		},
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
+		AllowHeaders:     "x-spotify-token ,Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
 		AllowCredentials: true,
 	}))
 	app.Use(logger.New())
