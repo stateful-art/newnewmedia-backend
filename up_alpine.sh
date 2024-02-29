@@ -33,8 +33,8 @@ done
 REPLICAS=${REPLICAS%,}
 
 # Create the Redis cluster
-docker exec -it "redis-node1" \
-redis-cli --cluster create $NODES --cluster-replicas 1
+docker exec "redis-node1" \
+redis-cli --cluster create $NODES --cluster-replicas 1 --cluster-yes
 
 # Wait for a few seconds for the nodes to be added to the cluster
 sleep 12

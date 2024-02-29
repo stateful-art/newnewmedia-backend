@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Pull the latest Redis image if not already present
+# Pull the Redis image if not already present
 docker pull redis:latest
 
 # Create the Redis cluster nodes in a loop
@@ -33,7 +33,7 @@ done
 REPLICAS=${REPLICAS%,}
 
 # Create the Redis cluster
-docker exec -it "redis-node1" \
+docker exec "redis-node1" \
 redis-cli --cluster create $NODES --cluster-replicas 1
 
 # Wait for a few seconds for the nodes to be added to the cluster
