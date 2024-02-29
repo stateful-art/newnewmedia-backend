@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Pull the latest Redis Alpine image if not already present
+# Pull the Redis Alpine image if not already present
 docker pull redis:alpine
 
 # Create the Redis cluster nodes in a loop
@@ -44,8 +44,18 @@ if ! docker network inspect nginx-proxyy &>/dev/null; then
     docker network create nginx-proxyy
 fi
 
-# Write the Redis cluster nodes to the .env file
-echo "REDIS_CLUSTER_NODES=$NODES" >> .env
+# Check if .env file exists, and create it if not
+ENV_FILE=".env"
+if [ ! -f "$ENV_FILE" ]; then
+    touch "$ENV_FILE"
+fi
+
+# Check if Redis cluster nodes are already present in .env file
+if ! grep -q "REDIS_CLUSTER_NODES=" "$ENV_FILE"; then
+    echo "REDIS_CLUSTER_NODES=$NODES" >> "$ENV_FILE"
+else
+    echo "REDIS_CLUSTER_NODES already exists in $ENV_FILE, skipping..."
+fi
 
 # Start the Docker Compose stack
 docker-compose up -d
