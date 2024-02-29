@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
@@ -37,20 +38,15 @@ func init() {
 	}
 	StorageClient = client
 	log.Println("Initialised google cloud storage client")
-	// Initialize Redis cluster client
-	// RedisClient = redis.NewClusterClient(&redis.ClusterOptions{
-	// 	Addrs: []string{":7000", ":7001", ":7002", ":7003", ":7004", ":7005"}, // Redis cluster nodes addresses
-	// })
 
+	redisNodes := os.Getenv("REDIS_CLUSTER_NODES")
+	if redisNodes == "" {
+		log.Fatal("REDIS_CLUSTER_NODES environment variable is not set")
+	}
+
+	redisAddrs := strings.Split(redisNodes, ",")
 	RedisClient = redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs: []string{
-			"192.168.215.2:7000",
-			"192.168.215.3:7001",
-			"192.168.215.4:7002",
-			"192.168.215.5:7003",
-			"192.168.215.6:7004",
-			"192.168.215.7:7005",
-		},
+		Addrs: redisAddrs,
 	})
 
 	// Create a context
@@ -72,7 +68,7 @@ func main() {
 
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: func(origin string) bool {
-			return origin == "https://www.newnew.media/" || origin == "http://localhost:5173/"
+			return origin == "https://www.app.newnew.media/" || origin == "http://localhost:5173/"
 		},
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders:     "x-spotify-token ,Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",

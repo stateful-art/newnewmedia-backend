@@ -17,14 +17,20 @@ sleep 5
 NODES=""
 for i in {1..6}; do
     NODE_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "redis-node$i")
-    NODES="$NODES $NODE_IP:700$i"
+    NODES+="$NODE_IP:700$i,"
 done
+
+# Remove the trailing comma
+NODES=${NODES%,}
 
 # Add replicas for each node
 REPLICAS=""
 for i in {1..3}; do
-    REPLICAS="$REPLICAS $NODES"
+    REPLICAS+="$NODES,"
 done
+
+# Remove the trailing comma
+REPLICAS=${REPLICAS%,}
 
 # Create the Redis cluster
 docker exec -it "redis-node1" \
@@ -37,6 +43,9 @@ sleep 12
 if ! docker network inspect nginx-proxyy &>/dev/null; then
     docker network create nginx-proxyy
 fi
+
+# Write the Redis cluster nodes to the .env file
+echo "REDIS_CLUSTER_NODES=$NODES" > .env
 
 # Start the Docker Compose stack
 docker-compose up -d
