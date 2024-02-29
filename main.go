@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
@@ -37,19 +38,26 @@ func init() {
 	StorageClient = client
 	log.Println("Initialised google cloud storage client")
 
-	ctx = context.Background()
-
-	// Initialize Redis client
-	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_ADDRESS"), // Redis address
-		Password: "",                         // Redis password, if any
-		DB:       0,                          // Redis database index
-	})
-
-	if err := RedisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+	// Initialize Redis client with retry logic
+	redisCtx := context.Background()
+	log.Println("Connecting to Redis")
+	var redisOptions *redis.Options
+	var redisErr error
+	for attempt := 1; attempt <= 3; attempt++ { // Retry 3 times with exponential backoff
+		RedisClient, redisOptions, redisErr = connectToRedis(redisCtx)
+		if redisErr == nil {
+			log.Println("Connected to Redis")
+			break
+		}
+		log.Printf("Failed to connect to Redis (attempt %d): %v\n", attempt, redisErr)
+		time.Sleep(time.Duration(attempt) * time.Second) // Exponential backoff
 	}
-	log.Println("Connected to Redis")
+	if redisErr != nil {
+		log.Fatalf("Failed to connect to Redis after multiple attempts: %v", redisErr)
+	}
+
+	// Optionally, you can log Redis client options
+	// log.Printf("Redis Client Options: %+v\n", redisOptions)
 }
 
 func main() {
@@ -83,4 +91,17 @@ func main() {
 	playlistroute.PlaceRoutes(playlists)
 
 	log.Fatal(app.Listen(":3000"))
+}
+
+func connectToRedis(ctx context.Context) (*redis.Client, *redis.Options, error) {
+	options := &redis.Options{
+		Addr:     os.Getenv("REDIS_ADDRESS"), // Redis address
+		Password: "",                         // Redis password, if any
+		DB:       0,                          // Redis database index
+	}
+	client := redis.NewClient(options)
+	if err := client.Ping(ctx).Err(); err != nil {
+		return nil, options, err
+	}
+	return client, options, nil
 }

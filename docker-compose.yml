@@ -36,6 +36,8 @@ services:
     restart: always
     volumes:
       - redis_data:/data
+    networks:
+      - redis-network  # Assign the Redis service to the redis-network
 
   backend_fiber:
     image: golang:1.21.0-alpine
@@ -51,9 +53,11 @@ services:
     expose:
       - "3000"
     depends_on:
+      - letsencrypt
       - redis-alpine  # Specify Redis Alpine as a dependency
     networks:
       - proxy
+      - redis-network  # Connect the backend_fiber service to the redis-network
 
 volumes:
   conf:
@@ -67,3 +71,4 @@ networks:
   proxy:
     external:
       name: nginx-proxyy
+  redis-network:
