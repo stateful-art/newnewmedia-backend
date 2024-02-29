@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
@@ -20,9 +19,8 @@ import (
 	playlistroute "newnewmedia.com/microservices/playlist/routes"
 )
 
-var StorageClient *storage.Client    // Global variable to hold the GCS client instance
-var RedisClient *redis.ClusterClient // Global variable to hold the Redis client instance
-// Initialize the GCS client during application startup
+var StorageClient *storage.Client // Global variable to hold the GCS client instance
+var RedisClient *redis.Client     // Global variable to hold the Redis client instance// Initialize the GCS client during application startup
 func init() {
 	// Set the path to your credentials file
 	credentialsFile := filepath.FromSlash("creds/creds.json")
@@ -44,19 +42,16 @@ func init() {
 		log.Fatal("REDIS_CLUSTER_NODES environment variable is not set")
 	}
 
-	redisAddrs := strings.Split(redisNodes, ",")
-	RedisClient = redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs: redisAddrs,
+	// Initialize Redis client
+	RedisClient = redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_ADDRESS"), // Redis address
+		Password: "",                         // Redis password, if any
+		DB:       0,                          // Redis database index
 	})
-
-	// Create a context
-	ctx = context.Background()
-
-	// Ping Redis cluster to check the connection
 	if err := RedisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis cluster: %v", err)
+		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
-	log.Println("Connected to Redis cluster")
+	log.Println("Connected to Redis")
 }
 
 func main() {

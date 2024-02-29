@@ -7,7 +7,7 @@ import (
 	controller "newnewmedia.com/microservices/auth/controller"
 )
 
-func AuthRoutes(app fiber.Router, storageClient *storage.Client, redisClient *redis.ClusterClient) {
+func AuthRoutes(app fiber.Router, storageClient *storage.Client, redisClient *redis.Client) {
 
 	// Register Spotify authentication routes
 	app.Get("/spotify", controller.SpotifyLogin) // Initiate Spotify login

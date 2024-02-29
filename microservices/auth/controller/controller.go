@@ -49,7 +49,7 @@ func SpotifyLogin(c *fiber.Ctx) error {
 // }
 
 // SpotifyCallback handles the callback from Spotify after user authorization
-func SpotifyCallback(c *fiber.Ctx, redisClient *redis.ClusterClient) error {
+func SpotifyCallback(c *fiber.Ctx, redisClient *redis.Client) error {
 	code := c.Query("code")
 	if code == "" {
 		// Handle error
@@ -100,7 +100,7 @@ func (st *SpotifyToken) UnmarshalBinary(data []byte) error {
 }
 
 // storeSpotifyToken stores the Spotify token in Redis
-func storeSpotifyToken(redisClient *redis.ClusterClient, spotifyToken *service.SpotifyToken) error {
+func storeSpotifyToken(redisClient *redis.Client, spotifyToken *service.SpotifyToken) error {
 	// Check if redisClient is nil
 	if redisClient == nil {
 		return errors.New("redisClient is nil")

@@ -29,6 +29,14 @@ services:
       - html:/usr/share/nginx/html
     restart: always
 
+  redis-alpine:  # Define a new service for Redis Alpine
+    image: redis:alpine
+    ports:
+      - "6379:6379"  # Expose port 6379 for Redis
+    restart: always
+    volumes:
+      - redis_data:/data
+
   backend_fiber:
     image: golang:1.21.0-alpine
     build: .
@@ -42,6 +50,8 @@ services:
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
     expose:
       - "3000"
+    depends_on:
+      - redis-alpine  # Specify Redis Alpine as a dependency
     networks:
       - proxy
 
@@ -51,6 +61,7 @@ volumes:
   html:
   dhparam:
   certs:
+  redis_data:
 
 networks:
   proxy:
