@@ -37,10 +37,7 @@ func init() {
 	StorageClient = client
 	log.Println("Initialised google cloud storage client")
 
-	redisNodes := os.Getenv("REDIS_CLUSTER_NODES")
-	if redisNodes == "" {
-		log.Fatal("REDIS_CLUSTER_NODES environment variable is not set")
-	}
+	ctx = context.Background()
 
 	// Initialize Redis client
 	RedisClient = redis.NewClient(&redis.Options{
@@ -48,6 +45,7 @@ func init() {
 		Password: "",                         // Redis password, if any
 		DB:       0,                          // Redis database index
 	})
+
 	if err := RedisClient.Ping(ctx).Err(); err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}

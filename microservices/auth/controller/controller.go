@@ -115,6 +115,8 @@ func storeSpotifyToken(redisClient *redis.Client, spotifyToken *service.SpotifyT
 
 	// Set the Spotify token in Redis with SpotifyID as the key
 	key := "spotify:" + spotifyToken.SpotifyID
+	log.Printf("added %s key to redis.", key)
+
 	if err := redisClient.Set(context.Background(), key, tokenJSON, 0).Err(); err != nil {
 		// Log error
 		log.Println("Error setting Spotify token in Redis:", err)
@@ -124,19 +126,3 @@ func storeSpotifyToken(redisClient *redis.Client, spotifyToken *service.SpotifyT
 
 	return nil
 }
-
-// func storeSpotifyToken(redisClient *redis.Client, spotifyToken *service.SpotifyToken) error {
-// 	// Convert Spotify token to JSON
-// 	tokenJSON, err := json.Marshal(spotifyToken)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Set the Spotify token in Redis with SpotifyID as the key
-// 	key := "spotify:" + spotifyToken.SpotifyID
-// 	if err := redisClient.Set(context.Background(), key, tokenJSON, 0).Err(); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
