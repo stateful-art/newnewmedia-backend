@@ -76,7 +76,7 @@ func SpotifyCallback(c *fiber.Ctx, redisClient *redis.Client) error {
 	}
 
 	// Redirect the client to the specified URL
-	redirectURL := fmt.Sprintf("%s/?code=%s&refresh=%s&expire=%s", os.Getenv("TEST_WEBAPP_ORIGIN"), spotifyToken.AccessToken, spotifyToken.RefreshToken, strconv.FormatInt(spotifyToken.ExpiresIn, 10))
+	redirectURL := fmt.Sprintf("%s/?code=%s&refresh=%s&expire=%s", os.Getenv("WEBAPP_ORIGIN"), spotifyToken.AccessToken, spotifyToken.RefreshToken, strconv.FormatInt(spotifyToken.ExpiresIn, 10))
 	c.Redirect(redirectURL, fiber.StatusSeeOther)
 
 	// Return nil to indicate success
