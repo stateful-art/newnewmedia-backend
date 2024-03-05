@@ -18,6 +18,7 @@ import (
 	musicroute "newnewmedia.com/microservices/music/routes"
 	placesroute "newnewmedia.com/microservices/place/routes"
 	playlistroute "newnewmedia.com/microservices/playlist/routes"
+	revenueroute "newnewmedia.com/microservices/revenue/routes"
 )
 
 var StorageClient *storage.Client // Global variable to hold the GCS client instance
@@ -91,11 +92,13 @@ func main() {
 	music := app.Group("/music")
 	places := app.Group("/places")
 	playlists := app.Group("/playlists")
+	revenues := app.Group("/revenues")
 
 	authroute.AuthRoutes(auth, StorageClient, RedisClient)
 	placesroute.PlaceRoutes(places)
 	musicroute.MusicRoutes(music, StorageClient)
 	playlistroute.PlaylistRoutes(playlists)
+	revenueroute.RevenueRoutes(revenues)
 
 	log.Print("APP @ 3000 : OK")
 	log.Fatal(app.Listen(":3000"))

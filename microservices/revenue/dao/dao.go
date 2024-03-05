@@ -39,3 +39,12 @@ type Playlist struct {
 	CreatedAt            time.Time           `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	UpdatedAt            time.Time           `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 }
+
+type Revenue struct {
+	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	PlaylistID primitive.ObjectID `json:"playlist_id,omitempty" bson:"playlist_id,omitempty"`
+	ArtistID   primitive.ObjectID `json:"artist_id,omitempty" bson:"artist_id,omitempty"`
+	Revenue    float64            `json:"revenue,omitempty" bson:"revenue,omitempty"`
+	CreatedAt  time.Time          `json:"created_at,omitempty" bson:"created_at,omitempty"`
+	UpdatedAt  time.Time          `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
+}

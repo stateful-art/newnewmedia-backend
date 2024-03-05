@@ -10,4 +10,5 @@ var (
 	MusicCollection     = db.Client.Database("newnewmedia").Collection("music")
 	PlaylistsCollection = db.Client.Database("newnewmedia").Collection("playlists")
 	ArtistsCollection   = db.Client.Database("newnewmedia").Collection("artists")
+	RevenuesCollection  = db.Client.Database("newnewmedia").Collection("revenues")
 )

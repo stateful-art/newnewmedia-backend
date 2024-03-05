@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnewmedia.com/microservices/playlist/dao"
+	dao "newnewmedia.com/microservices/playlist/dao"
 	"newnewmedia.com/microservices/playlist/service"
 )
 
@@ -21,6 +21,7 @@ func (c *PlaylistController) CreatePlaylist(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
 	}
 
+	// Call the service function with the additional parameters
 	if err := c.playlistService.CreatePlaylist(playlist); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to create playlist"})
 	}
