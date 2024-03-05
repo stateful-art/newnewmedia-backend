@@ -45,3 +45,8 @@ type RevenueCalculateRequest struct {
 	Playlist     dao.Playlist `json:"playlist"`
 	TotalRevenue float64      `json:"totalRevenue"`
 }
+
+type PlaylistSongsUpdateRequest struct {
+	PlaylistID primitive.ObjectID   `json:"playlist_id"`
+	SongIDs    []primitive.ObjectID `json:"song_ids"`
+}

@@ -35,62 +35,55 @@ func (s *PlaylistService) DeletePlaylist(id primitive.ObjectID) error {
 	return repository.DeletePlaylist(id)
 }
 
-// func (s *PlaylistService) CalculateCollectiveRevenueSplit(playlist dao.Playlist, totalRevenue float64) (map[primitive.ObjectID]float64, error) {
-// 	if playlist.Type != dao.Private || playlist.RevenueSharingModel != dao.CollectiveSharing {
-// 		return nil, errors.New("playlist must be private with collective revenue sharing model")
-// 	}
+func (s *PlaylistService) AddSongsToPlaylist(playlistID primitive.ObjectID, songIDs []primitive.ObjectID) error {
+	// Check if the playlist exists
+	playlist, err := repository.GetPlaylistByID(playlistID)
+	if err != nil {
+		return err
+	}
 
-// 	// Deduct owner's share based on revenue cut percentage
-// 	ownerShare := totalRevenue * playlist.RevenueCutPercentage / 100.0
-// 	remainingRevenue := totalRevenue - ownerShare
+	// Create Song objects for each songID and append them to the playlist
+	for _, songID := range songIDs {
+		newSong := dao.Song{ID: songID}
+		playlist.Songs = append(playlist.Songs, newSong)
+	}
 
-// 	// Count the number of unique artists in the playlist
-// 	uniqueArtistsCount := 0
-// 	uniqueArtists := make(map[primitive.ObjectID]bool)
-// 	for _, song := range playlist.Songs {
-// 		if _, found := uniqueArtists[song.ArtistID]; !found {
-// 			uniqueArtists[song.ArtistID] = true
-// 			uniqueArtistsCount++
-// 		}
-// 	}
+	// Update the playlist with the new songs
+	err = repository.UpdatePlaylist(playlistID, playlist)
+	if err != nil {
+		return err
+	}
 
-// 	// Calculate share for each artist equally
-// 	artistShare := remainingRevenue / float64(uniqueArtistsCount)
+	return nil
+}
 
-// 	// Prepare map to store artist shares
-// 	artistShares := make(map[primitive.ObjectID]float64)
+func (s *PlaylistService) RemoveSongsFromPlaylist(playlistID primitive.ObjectID, songIDs []primitive.ObjectID) error {
+	// Check if the playlist exists
+	playlist, err := repository.GetPlaylistByID(playlistID)
+	if err != nil {
+		return err
+	}
 
-// 	// Assign equal share to each artist
-// 	for artist := range uniqueArtists {
-// 		artistShares[artist] = artistShare
-// 	}
+	// Create a map to store the songIDs to be removed for efficient lookup
+	songIDMap := make(map[primitive.ObjectID]bool)
+	for _, songID := range songIDs {
+		songIDMap[songID] = true
+	}
 
-// 	return artistShares, nil
-// }
+	// Filter out the songs to be removed from the playlist's list of songs
+	var filteredSongs []dao.Song
+	for _, song := range playlist.Songs {
+		if !songIDMap[song.ID] {
+			filteredSongs = append(filteredSongs, song)
+		}
+	}
 
-// func (s *PlaylistService) CalculateIndividualRevenueSplit(playlist dao.Playlist, totalRevenue float64) (map[primitive.ObjectID]float64, error) {
-// 	if playlist.Type != dao.Private || playlist.RevenueSharingModel != dao.IndividualSharing {
-// 		return nil, errors.New("playlist must be private with individual revenue sharing model")
-// 	}
+	// Update the playlist with the filtered list of songs
+	playlist.Songs = filteredSongs
+	err = repository.UpdatePlaylist(playlistID, playlist)
+	if err != nil {
+		return err
+	}
 
-// 	// Deduct owner's share based on revenue cut percentage
-// 	ownerShare := totalRevenue * playlist.RevenueCutPercentage / 100.0
-// 	remainingRevenue := totalRevenue - ownerShare
-
-// 	// Prepare map to store individual artist shares
-// 	artistShares := make(map[primitive.ObjectID]float64)
-
-// 	// Calculate total play count for all songs in the playlist
-// 	totalPlayCount := float64(0)
-// 	for _, song := range playlist.Songs {
-// 		totalPlayCount += float64(song.PlayCount)
-// 	}
-
-// 	// Calculate share for each artist based on their song's play count
-// 	for _, song := range playlist.Songs {
-// 		artistShare := remainingRevenue * (float64(song.PlayCount) / totalPlayCount)
-// 		artistShares[song.ArtistID] += artistShare
-// 	}
-
-// 	return artistShares, nil
-// }
+	return nil
+}

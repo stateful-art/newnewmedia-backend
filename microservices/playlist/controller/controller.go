@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"newnewmedia.com/microservices/music/dto"
 	dao "newnewmedia.com/microservices/playlist/dao"
 	"newnewmedia.com/microservices/playlist/service"
 )
@@ -84,4 +85,34 @@ func (c *PlaylistController) DeletePlaylist(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Playlist deleted successfully"})
+}
+
+func (c *PlaylistController) AddSongsToPlaylist(ctx *fiber.Ctx) error {
+	var PlaylistSongsAddRequest dto.PlaylistSongsUpdateRequest
+
+	if err := ctx.BodyParser(&PlaylistSongsAddRequest); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
+	}
+
+	// Call the service function to add songs to the playlist
+	if err := c.playlistService.AddSongsToPlaylist(PlaylistSongsAddRequest.PlaylistID, PlaylistSongsAddRequest.SongIDs); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to add songs to playlist"})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Songs added to playlist successfully"})
+}
+
+func (c *PlaylistController) RemoveSongsFromPlaylist(ctx *fiber.Ctx) error {
+	var PlaylistSongsRemoveRequest dto.PlaylistSongsUpdateRequest
+
+	if err := ctx.BodyParser(&PlaylistSongsRemoveRequest); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
+	}
+
+	// Call the service function to remove songs from the playlist
+	if err := c.playlistService.RemoveSongsFromPlaylist(PlaylistSongsRemoveRequest.PlaylistID, PlaylistSongsRemoveRequest.SongIDs); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to remove songs from playlist"})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Songs removed from playlist successfully"})
 }
