@@ -3,8 +3,8 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnewmedia.com/microservices/music/dto"
 	dao "newnewmedia.com/microservices/playlist/dao"
+	dto "newnewmedia.com/microservices/playlist/dto"
 	"newnewmedia.com/microservices/playlist/service"
 )
 
