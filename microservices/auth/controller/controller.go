@@ -11,7 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
-	service "newnewmedia.com/microservices/auth/service" // Import your service package
+	service "newnew.media/microservices/auth/service" // Import your service package
 )
 
 type SpotifyToken struct {

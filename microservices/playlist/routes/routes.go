@@ -2,9 +2,9 @@ package playlistroutes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	controller "newnewmedia.com/microservices/playlist/controller"
-	repo "newnewmedia.com/microservices/playlist/repository"
-	service "newnewmedia.com/microservices/playlist/service"
+	controller "newnew.media/microservices/playlist/controller"
+	repo "newnew.media/microservices/playlist/repository"
+	service "newnew.media/microservices/playlist/service"
 )
 
 func PlaylistRoutes(app fiber.Router) {

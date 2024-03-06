@@ -2,7 +2,7 @@ package placeroutes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	controller "newnewmedia.com/microservices/place/controller"
+	controller "newnew.media/microservices/place/controller"
 )
 
 func PlaceRoutes(app fiber.Router) {

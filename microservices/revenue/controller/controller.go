@@ -3,9 +3,9 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnewmedia.com/microservices/revenue/dao"
-	"newnewmedia.com/microservices/revenue/dto"
-	"newnewmedia.com/microservices/revenue/service"
+	"newnew.media/microservices/revenue/dao"
+	"newnew.media/microservices/revenue/dto"
+	"newnew.media/microservices/revenue/service"
 )
 
 type RevenueController struct {

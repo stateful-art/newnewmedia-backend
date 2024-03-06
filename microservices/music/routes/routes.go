@@ -3,7 +3,7 @@ package musicroutes
 import (
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
-	controller "newnewmedia.com/microservices/music/controller"
+	controller "newnew.media/microservices/music/controller"
 )
 
 func MusicRoutes(app fiber.Router, storageClient *storage.Client) {

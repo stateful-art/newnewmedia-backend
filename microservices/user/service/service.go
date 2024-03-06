@@ -2,10 +2,10 @@ package service
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnewmedia.com/microservices/user/dao"
-	"newnewmedia.com/microservices/user/dto"
+	"newnew.media/microservices/user/dao"
+	"newnew.media/microservices/user/dto"
 
-	repository "newnewmedia.com/microservices/user/repository"
+	repository "newnew.media/microservices/user/repository"
 )
 
 type UserService struct {

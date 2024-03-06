@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
-	controller "newnewmedia.com/microservices/auth/controller"
+	controller "newnew.media/microservices/auth/controller"
 )
 
 func AuthRoutes(app fiber.Router, storageClient *storage.Client, redisClient *redis.Client) {

@@ -3,8 +3,8 @@ package service
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	dto "newnewmedia.com/microservices/place/dto"
-	repository "newnewmedia.com/microservices/place/repository"
+	dto "newnew.media/microservices/place/dto"
+	repository "newnew.media/microservices/place/repository"
 )
 
 func CreatePlace(c *fiber.Ctx, place dto.Place) error {

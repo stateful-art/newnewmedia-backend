@@ -1,7 +1,7 @@
 package collections
 
 import (
-	db "newnewmedia.com/db"
+	db "newnew.media/db"
 )
 
 var (

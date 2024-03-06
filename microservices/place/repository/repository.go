@@ -6,8 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	collections "newnewmedia.com/db/collections"
-	dto "newnewmedia.com/microservices/place/dto"
+	collections "newnew.media/db/collections"
+	dto "newnew.media/microservices/place/dto"
 )
 
 func GetPlaces(c *fiber.Ctx) ([]dto.Place, error) {

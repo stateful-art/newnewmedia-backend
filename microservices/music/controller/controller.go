@@ -8,8 +8,8 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/oauth2"
-	dto "newnewmedia.com/microservices/music/dto"
-	service "newnewmedia.com/microservices/music/service"
+	dto "newnew.media/microservices/music/dto"
+	service "newnew.media/microservices/music/service"
 )
 
 func GetSong(c *fiber.Ctx, storageClient *storage.Client) (dto.MusicRetrieve, error) {

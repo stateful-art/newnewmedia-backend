@@ -2,9 +2,9 @@ package service
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnewmedia.com/microservices/playlist/dao"
+	"newnew.media/microservices/playlist/dao"
 
-	"newnewmedia.com/microservices/playlist/repository"
+	"newnew.media/microservices/playlist/repository"
 )
 
 type PlaylistService struct {

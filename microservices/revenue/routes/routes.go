@@ -2,9 +2,9 @@ package revenueroutes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	controller "newnewmedia.com/microservices/revenue/controller"
-	repo "newnewmedia.com/microservices/revenue/repository"
-	service "newnewmedia.com/microservices/revenue/service"
+	controller "newnew.media/microservices/revenue/controller"
+	repo "newnew.media/microservices/revenue/repository"
+	service "newnew.media/microservices/revenue/service"
 )
 
 func RevenueRoutes(app fiber.Router) {

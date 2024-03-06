@@ -2,8 +2,8 @@ package controller
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"newnewmedia.com/microservices/place/dto"
-	services "newnewmedia.com/microservices/place/service"
+	"newnew.media/microservices/place/dto"
+	services "newnew.media/microservices/place/service"
 )
 
 func GetPlaces(c *fiber.Ctx) error {

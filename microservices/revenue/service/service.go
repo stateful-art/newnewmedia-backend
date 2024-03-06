@@ -4,10 +4,10 @@ import (
 	"errors"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnewmedia.com/microservices/revenue/dao"
-	"newnewmedia.com/microservices/revenue/dto"
+	"newnew.media/microservices/revenue/dao"
+	"newnew.media/microservices/revenue/dto"
 
-	"newnewmedia.com/microservices/revenue/repository"
+	"newnew.media/microservices/revenue/repository"
 )
 
 type RevenueService struct {

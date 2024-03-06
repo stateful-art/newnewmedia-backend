@@ -11,9 +11,9 @@ import (
 	"github.com/zmb3/spotify"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
-	"newnewmedia.com/microservices/music/dao"
-	"newnewmedia.com/microservices/music/dto"
-	repository "newnewmedia.com/microservices/music/repository"
+	"newnew.media/microservices/music/dao"
+	"newnew.media/microservices/music/dto"
+	repository "newnew.media/microservices/music/repository"
 )
 
 // GetAudioFilePath retrieves the audio file path based on song ID

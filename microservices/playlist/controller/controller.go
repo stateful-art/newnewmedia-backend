@@ -3,9 +3,9 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	dao "newnewmedia.com/microservices/playlist/dao"
-	dto "newnewmedia.com/microservices/playlist/dto"
-	"newnewmedia.com/microservices/playlist/service"
+	dao "newnew.media/microservices/playlist/dao"
+	dto "newnew.media/microservices/playlist/dto"
+	"newnew.media/microservices/playlist/service"
 )
 
 type PlaylistController struct {

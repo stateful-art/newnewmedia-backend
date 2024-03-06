@@ -2,9 +2,9 @@ package userroutes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	controller "newnewmedia.com/microservices/user/controller"
-	repo "newnewmedia.com/microservices/user/repository"
-	service "newnewmedia.com/microservices/user/service"
+	controller "newnew.media/microservices/user/controller"
+	repo "newnew.media/microservices/user/repository"
+	service "newnew.media/microservices/user/service"
 )
 
 func UserRoutes(app fiber.Router) {

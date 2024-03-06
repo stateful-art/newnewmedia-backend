@@ -9,8 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	collections "newnewmedia.com/db/collections"
-	dao "newnewmedia.com/microservices/user/dao"
+	collections "newnew.media/db/collections"
+	dao "newnew.media/microservices/user/dao"
 )
 
 type UserRepository struct {

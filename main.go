@@ -12,14 +12,14 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/redis/go-redis/v9"
-	utils "newnewmedia.com/commons/utils"
-	db "newnewmedia.com/db"
-	authroute "newnewmedia.com/microservices/auth/routes"
-	musicroute "newnewmedia.com/microservices/music/routes"
-	placesroute "newnewmedia.com/microservices/place/routes"
-	playlistroute "newnewmedia.com/microservices/playlist/routes"
-	revenueroute "newnewmedia.com/microservices/revenue/routes"
-	userroute "newnewmedia.com/microservices/user/routes"
+	utils "newnew.media/commons/utils"
+	db "newnew.media/db"
+	authroute "newnew.media/microservices/auth/routes"
+	musicroute "newnew.media/microservices/music/routes"
+	placesroute "newnew.media/microservices/place/routes"
+	playlistroute "newnew.media/microservices/playlist/routes"
+	revenueroute "newnew.media/microservices/revenue/routes"
+	userroute "newnew.media/microservices/user/routes"
 )
 
 var StorageClient *storage.Client // Global variable to hold the GCS client instance

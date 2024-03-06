@@ -3,9 +3,9 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnewmedia.com/microservices/user/dao"
-	"newnewmedia.com/microservices/user/dto"
-	"newnewmedia.com/microservices/user/service"
+	"newnew.media/microservices/user/dao"
+	"newnew.media/microservices/user/dto"
+	"newnew.media/microservices/user/service"
 )
 
 type UserController struct {

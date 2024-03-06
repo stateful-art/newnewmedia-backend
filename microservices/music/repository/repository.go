@@ -6,8 +6,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	collections "newnewmedia.com/db/collections"
-	dao "newnewmedia.com/microservices/music/dao"
+	collections "newnew.media/db/collections"
+	dao "newnew.media/microservices/music/dao"
 )
 
 func CreateMusic(music dao.Song) error {

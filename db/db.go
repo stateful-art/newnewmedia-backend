@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	utils "newnewmedia.com/commons/utils"
+	utils "newnew.media/commons/utils"
 )
 
 // ConnectDB connects to the database

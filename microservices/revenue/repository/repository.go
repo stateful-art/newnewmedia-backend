@@ -7,8 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	collections "newnewmedia.com/db/collections"
-	dao "newnewmedia.com/microservices/revenue/dao"
+	collections "newnew.media/db/collections"
+	dao "newnew.media/microservices/revenue/dao"
 )
 
 type RevenueRepository struct {

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnewmedia.com/microservices/playlist/dao"
+	"newnew.media/microservices/playlist/dao"
 )
 
 type Song struct {

@@ -1,4 +1,4 @@
-module newnewmedia.com
+module newnew.media
 
 go 1.21.0
 
