@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,21 +31,6 @@ func SpotifyLogin(c *fiber.Ctx) error {
 	return c.Redirect(authURL)
 
 }
-
-// // SpotifyCallback handles the callback from Spotify after user authorization
-// func SpotifyCallback(c *fiber.Ctx) error {
-// 	code := c.Query("code")
-// 	if code == "" {
-// 		// Handle error
-// 		return fiber.ErrBadRequest
-// 	}
-// 	spotifyToken, err := service.HandleSpotifyCallback(c, code)
-// 	if err != nil {
-// 		// Handle error
-// 		return err
-// 	}
-// 	return c.JSON(spotifyToken)
-// }
 
 // SpotifyCallback handles the callback from Spotify after user authorization
 func SpotifyCallback(c *fiber.Ctx, redisClient *redis.Client) error {
@@ -83,21 +67,21 @@ func SpotifyCallback(c *fiber.Ctx, redisClient *redis.Client) error {
 	return nil
 }
 
-func (st *SpotifyToken) MarshalBinary() ([]byte, error) {
-	expiresInBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(expiresInBytes, uint64(st.ExpiresIn))
+// func (st *SpotifyToken) MarshalBinary() ([]byte, error) {
+// 	expiresInBytes := make([]byte, 8)
+// 	binary.BigEndian.PutUint64(expiresInBytes, uint64(st.ExpiresIn))
 
-	// Concatenate all fields into a byte slice
-	tokenBytes := []byte(st.AccessToken + st.RefreshToken + st.SpotifyID)
+// 	// Concatenate all fields into a byte slice
+// 	tokenBytes := []byte(st.AccessToken + st.RefreshToken + st.SpotifyID)
 
-	// Combine expiresInBytes and tokenBytes
-	return append(expiresInBytes, tokenBytes...), nil
-}
+// 	// Combine expiresInBytes and tokenBytes
+// 	return append(expiresInBytes, tokenBytes...), nil
+// }
 
-func (st *SpotifyToken) UnmarshalBinary(data []byte) error {
-	// Implement UnmarshalBinary if needed
-	return nil
-}
+// func (st *SpotifyToken) UnmarshalBinary(data []byte) error {
+// 	// Implement UnmarshalBinary if needed
+// 	return nil
+// }
 
 // storeSpotifyToken stores the Spotify token in Redis
 func storeSpotifyToken(redisClient *redis.Client, spotifyToken *service.SpotifyToken) error {
