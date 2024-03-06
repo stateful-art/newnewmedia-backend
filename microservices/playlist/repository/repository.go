@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"reflect"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -70,15 +71,8 @@ func GetPlaylists() ([]dao.Playlist, error) {
 // UpdatePlaylist updates an existing playlist in the database.
 func UpdatePlaylist(id primitive.ObjectID, playlist dao.Playlist) error {
 	filter := bson.M{"_id": id}
-	update := bson.M{
-		"$set": bson.M{
-			"name":        playlist.Name,
-			"description": playlist.Description,
-			"owner":       playlist.Owner,
-			"updatedAt":   time.Now(),
-			"songs":       playlist.Songs,
-		},
-	}
+
+	update := generateUpdateQueryPlaylist(playlist)
 
 	_, err := collections.PlaylistsCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
@@ -101,4 +95,29 @@ func DeletePlaylist(id primitive.ObjectID) error {
 	}
 
 	return nil
+}
+
+// generateUpdateQueryPlaylist dynamically generates the update query based on the provided Playlist.
+func generateUpdateQueryPlaylist(playlist dao.Playlist) bson.M {
+	update := bson.M{"$set": bson.M{}}
+
+	playlistValue := reflect.ValueOf(playlist)
+	playlistType := playlistValue.Type()
+
+	for i := 0; i < playlistValue.NumField(); i++ {
+		field := playlistValue.Field(i)
+		fieldName := playlistType.Field(i).Name
+
+		// Check if the field is a zero value or empty string
+		if field.IsZero() && field.Interface() == "" {
+			continue
+		}
+
+		update["$set"].(bson.M)[fieldName] = field.Interface()
+	}
+
+	// Set updatedAt field
+	update["$set"].(bson.M)["updatedAt"] = time.Now()
+
+	return update
 }
