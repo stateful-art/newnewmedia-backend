@@ -1,6 +1,10 @@
 package dto
 
-import "mime/multipart"
+import (
+	"mime/multipart"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type MusicCreate struct {
 	ID     string                `json:"id,omitempty" bson:"_id,omitempty"`
@@ -8,6 +12,7 @@ type MusicCreate struct {
 	Artist string                `json:"artist"`
 	Path   string                `json:"path"`
 	Music  *multipart.FileHeader `json:"music"`
+	Genres []primitive.ObjectID  `bson:"genres"`
 }
 
 // MusicRetrieveDTO represents the DTO for retrieving an existing music record

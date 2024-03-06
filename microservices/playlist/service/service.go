@@ -16,28 +16,32 @@ func NewPlaylistService(playlistRepo *repository.PlaylistRepository) *PlaylistSe
 }
 
 func (s *PlaylistService) CreatePlaylist(playlist dao.Playlist) error {
-	return repository.CreatePlaylist(playlist)
+	return s.playlistRepo.CreatePlaylist(playlist)
 }
 
 func (s *PlaylistService) GetPlaylistByID(id primitive.ObjectID) (dao.Playlist, error) {
-	return repository.GetPlaylistByID(id)
+	return s.playlistRepo.GetPlaylistByID(id)
 }
 
 func (s *PlaylistService) GetPlaylists() ([]dao.Playlist, error) {
-	return repository.GetPlaylists()
+	return s.playlistRepo.GetPlaylists()
+}
+
+func (s *PlaylistService) GetPlaylistsByOwner(ownerID primitive.ObjectID) ([]dao.Playlist, error) {
+	return s.playlistRepo.GetPlaylistsByOwner(ownerID)
 }
 
 func (s *PlaylistService) UpdatePlaylist(id primitive.ObjectID, playlist dao.Playlist) error {
-	return repository.UpdatePlaylist(id, playlist)
+	return s.playlistRepo.UpdatePlaylist(id, playlist)
 }
 
 func (s *PlaylistService) DeletePlaylist(id primitive.ObjectID) error {
-	return repository.DeletePlaylist(id)
+	return s.playlistRepo.DeletePlaylist(id)
 }
 
 func (s *PlaylistService) AddSongsToPlaylist(playlistID primitive.ObjectID, songIDs []primitive.ObjectID) error {
 	// Check if the playlist exists
-	playlist, err := repository.GetPlaylistByID(playlistID)
+	playlist, err := s.playlistRepo.GetPlaylistByID(playlistID)
 	if err != nil {
 		return err
 	}
@@ -49,7 +53,7 @@ func (s *PlaylistService) AddSongsToPlaylist(playlistID primitive.ObjectID, song
 	}
 
 	// Update the playlist with the new songs
-	err = repository.UpdatePlaylist(playlistID, playlist)
+	err = s.playlistRepo.UpdatePlaylist(playlistID, playlist)
 	if err != nil {
 		return err
 	}
@@ -59,7 +63,7 @@ func (s *PlaylistService) AddSongsToPlaylist(playlistID primitive.ObjectID, song
 
 func (s *PlaylistService) RemoveSongsFromPlaylist(playlistID primitive.ObjectID, songIDs []primitive.ObjectID) error {
 	// Check if the playlist exists
-	playlist, err := repository.GetPlaylistByID(playlistID)
+	playlist, err := s.playlistRepo.GetPlaylistByID(playlistID)
 	if err != nil {
 		return err
 	}
@@ -80,7 +84,7 @@ func (s *PlaylistService) RemoveSongsFromPlaylist(playlistID primitive.ObjectID,
 
 	// Update the playlist with the filtered list of songs
 	playlist.Songs = filteredSongs
-	err = repository.UpdatePlaylist(playlistID, playlist)
+	err = s.playlistRepo.UpdatePlaylist(playlistID, playlist)
 	if err != nil {
 		return err
 	}

@@ -54,6 +54,22 @@ func (c *PlaylistController) GetPlaylists(ctx *fiber.Ctx) error {
 	return ctx.JSON(playlists)
 }
 
+// GetPlaylistsByOwner retrieves playlists by their owner's ID.
+func (c *PlaylistController) GetPlaylistsByOwner(ctx *fiber.Ctx) error {
+	ownerID := ctx.Params("owner_id") // Replace with the actual parameter name for owner ID in the route
+	objectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid owner ID"})
+	}
+
+	playlists, err := c.playlistService.GetPlaylistsByOwner(objectID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to retrieve playlists by owner"})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(playlists)
+}
+
 func (c *PlaylistController) UpdatePlaylist(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	objectID, err := primitive.ObjectIDFromHex(id)

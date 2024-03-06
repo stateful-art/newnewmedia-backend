@@ -3,7 +3,7 @@ package dao
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 // TODO: Update this as "Song"
-type Music struct {
+type Song struct {
 	ID     string               `json:"id,omitempty" bson:"_id,omitempty"`
 	Name   string               `json:"name"`
 	Artist string               `json:"artist"`
@@ -57,7 +57,7 @@ type BulkSongOffer struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	ArtistID   primitive.ObjectID `bson:"artist_id"`
 	PlaceID    primitive.ObjectID `bson:"place_id"`
-	Songs      []Music            `json:"songs,omitempty" bson:"songs,omitempty"`
+	Songs      []Song             `json:"songs,omitempty" bson:"songs,omitempty"`
 	Percentage float64            `bson:"percentage"`
 	Status     Status             `bson:"status"`
 }

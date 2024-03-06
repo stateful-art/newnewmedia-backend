@@ -58,7 +58,7 @@ func GetSong(songID string) (dto.MusicRetrieve, error) {
 	return song, nil
 }
 
-func GetMusicByPlace(id string) ([]dao.Music, error) {
+func GetMusicByPlace(id string) ([]dao.Song, error) {
 	placeObjID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func CreateMusic(c *fiber.Ctx, musicPayload dto.MusicCreate, audioFile *multipar
 		return err
 	}
 	// Store the music details in MongoDB
-	music := dao.Music{
+	music := dao.Song{
 		Name:   musicPayload.Name,
 		Artist: musicPayload.Artist,
 		Path:   fmt.Sprintf("gs://%s/%s", storageBucket, objectName), // GCS object path

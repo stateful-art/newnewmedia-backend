@@ -23,7 +23,7 @@ func NewPlaylistRepository() *PlaylistRepository {
 }
 
 // CreatePlaylist inserts a new playlist into the database.
-func CreatePlaylist(playlist dao.Playlist) error {
+func (pr *PlaylistRepository) CreatePlaylist(playlist dao.Playlist) error {
 	playlist.ID = primitive.NewObjectID()
 	playlist.CreatedAt = time.Now()
 	playlist.UpdatedAt = time.Now()
@@ -36,7 +36,7 @@ func CreatePlaylist(playlist dao.Playlist) error {
 }
 
 // GetPlaylistByID retrieves a playlist by its ID.
-func GetPlaylistByID(id primitive.ObjectID) (dao.Playlist, error) {
+func (pr *PlaylistRepository) GetPlaylistByID(id primitive.ObjectID) (dao.Playlist, error) {
 	var playlist dao.Playlist
 
 	filter := bson.M{"_id": id}
@@ -49,7 +49,7 @@ func GetPlaylistByID(id primitive.ObjectID) (dao.Playlist, error) {
 	return playlist, nil
 }
 
-func GetPlaylists() ([]dao.Playlist, error) {
+func (pr *PlaylistRepository) GetPlaylists() ([]dao.Playlist, error) {
 	var playlists []dao.Playlist
 
 	cursor, err := collections.PlaylistsCollection.Find(context.Background(), bson.M{})
@@ -68,11 +68,33 @@ func GetPlaylists() ([]dao.Playlist, error) {
 	return playlists, nil
 }
 
+// GetPlaylistsByOwner retrieves playlists by their owner's ID.
+func (pr *PlaylistRepository) GetPlaylistsByOwner(ownerID primitive.ObjectID) ([]dao.Playlist, error) {
+	var playlists []dao.Playlist
+
+	filter := bson.M{"owner": ownerID}
+
+	cursor, err := collections.PlaylistsCollection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var playlist dao.Playlist
+		if err := cursor.Decode(&playlist); err != nil {
+			return nil, err
+		}
+		playlists = append(playlists, playlist)
+	}
+
+	return playlists, nil
+}
+
 // UpdatePlaylist updates an existing playlist in the database.
-func UpdatePlaylist(id primitive.ObjectID, playlist dao.Playlist) error {
+func (pr *PlaylistRepository) UpdatePlaylist(id primitive.ObjectID, playlist dao.Playlist) error {
 	filter := bson.M{"_id": id}
 
-	update := generateUpdateQueryPlaylist(playlist)
+	update := pr.generateUpdateQueryPlaylist(playlist)
 
 	_, err := collections.PlaylistsCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
@@ -83,7 +105,7 @@ func UpdatePlaylist(id primitive.ObjectID, playlist dao.Playlist) error {
 }
 
 // DeletePlaylist deletes a playlist from the database.
-func DeletePlaylist(id primitive.ObjectID) error {
+func (pr *PlaylistRepository) DeletePlaylist(id primitive.ObjectID) error {
 	filter := bson.M{"_id": id}
 
 	result, err := collections.PlaylistsCollection.DeleteOne(context.Background(), filter)
@@ -98,7 +120,7 @@ func DeletePlaylist(id primitive.ObjectID) error {
 }
 
 // generateUpdateQueryPlaylist dynamically generates the update query based on the provided Playlist.
-func generateUpdateQueryPlaylist(playlist dao.Playlist) bson.M {
+func (pr *PlaylistRepository) generateUpdateQueryPlaylist(playlist dao.Playlist) bson.M {
 	update := bson.M{"$set": bson.M{}}
 
 	playlistValue := reflect.ValueOf(playlist)

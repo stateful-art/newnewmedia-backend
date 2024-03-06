@@ -31,7 +31,7 @@ type Playlist struct {
 	ID                   primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
 	Name                 string              `json:"name,omitempty" bson:"name,omitempty"`
 	Description          string              `json:"description,omitempty" bson:"description,omitempty"`
-	Owner                string              `json:"owner,omitempty" bson:"owner,omitempty"`
+	Owner                primitive.ObjectID  `json:"owner,omitempty" bson:"owner,omitempty"`
 	Type                 PlaylistType        `json:"type,omitempty" bson:"type,omitempty"`
 	RevenueSharingModel  RevenueSharingModel `json:"revenue_sharing_model,omitempty" bson:"revenue_sharing_model,omitempty"`
 	RevenueCutPercentage float64             `json:"revenue_cut_percentage,omitempty" bson:"revenue_cut_percentage,omitempty"`

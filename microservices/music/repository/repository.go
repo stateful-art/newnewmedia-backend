@@ -10,7 +10,7 @@ import (
 	dao "newnewmedia.com/microservices/music/dao"
 )
 
-func CreateMusic(music dao.Music) error {
+func CreateMusic(music dao.Song) error {
 
 	_, err := collections.MusicCollection.InsertOne(context.Background(), music)
 	if err != nil {
@@ -19,23 +19,23 @@ func CreateMusic(music dao.Music) error {
 	return nil
 }
 
-func GetMusicByPlace(id *primitive.ObjectID) ([]dao.Music, error) {
-	var music []dao.Music
+func GetMusicByPlace(id *primitive.ObjectID) ([]dao.Song, error) {
+	var music []dao.Song
 	cursor, err := collections.MusicCollection.Find(context.Background(), bson.M{"place": id})
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(context.Background())
 	for cursor.Next(context.Background()) {
-		var m dao.Music
+		var m dao.Song
 		cursor.Decode(&m)
 		music = append(music, m)
 	}
 	return music, nil
 }
 
-func GetMusicById(id primitive.ObjectID) (dao.Music, error) {
-	var music dao.Music
+func GetMusicById(id primitive.ObjectID) (dao.Song, error) {
+	var music dao.Song
 	log.Println(id)
 	// Define the filter to find music by ID
 	filter := bson.M{"_id": id}
