@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"newnew.media/microservices/user/dao"
 	"newnew.media/microservices/user/dto"
@@ -53,6 +55,12 @@ func (s *UserService) DeleteUser(id primitive.ObjectID) error {
 }
 
 func (s *UserService) AddRole(userID primitive.ObjectID, role dto.Role) error {
+
+	// Validate the role
+	if !isValidRole(role) {
+		return errors.New("Invalid Role")
+	}
+
 	userRole := dao.UserRole{
 		UserID: userID,
 		Role:   dao.Role(role),
@@ -63,4 +71,14 @@ func (s *UserService) AddRole(userID primitive.ObjectID, role dto.Role) error {
 func (s *UserService) RemoveRole(userID primitive.ObjectID, role dto.Role) error {
 	daoRole := dao.Role(role)
 	return s.userRepo.RemoveUserRole(userID, daoRole)
+}
+
+// Function to validate role
+func isValidRole(role dto.Role) bool {
+	switch role {
+	case dto.Audience, dto.Artist, dto.Place, dto.Admin, dto.Crew:
+		return true
+	default:
+		return false
+	}
 }

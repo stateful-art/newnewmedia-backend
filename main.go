@@ -15,6 +15,7 @@ import (
 	utils "newnew.media/commons/utils"
 	db "newnew.media/db"
 	authroute "newnew.media/microservices/auth/routes"
+	communicationroutes "newnew.media/microservices/communication/routes"
 	musicroute "newnew.media/microservices/music/routes"
 	placesroute "newnew.media/microservices/place/routes"
 	playlistroute "newnew.media/microservices/playlist/routes"
@@ -95,6 +96,7 @@ func main() {
 	playlists := app.Group("/playlists")
 	revenues := app.Group("/revenues")
 	users := app.Group("/users")
+	communications := app.Group("/comms")
 
 	authroute.AuthRoutes(auth, StorageClient, RedisClient)
 	placesroute.PlaceRoutes(places)
@@ -102,6 +104,7 @@ func main() {
 	playlistroute.PlaylistRoutes(playlists)
 	revenueroute.RevenueRoutes(revenues)
 	userroute.UserRoutes(users)
+	communicationroutes.CommunicationRoutes(communications, RedisClient)
 
 	log.Print("APP @ 3000 : OK")
 	log.Fatal(app.Listen(":3000"))

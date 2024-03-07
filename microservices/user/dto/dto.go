@@ -38,7 +38,7 @@ type UserRoles struct {
 	Roles  []Role             `bson:"role"`
 }
 
-type AddRoleRequest struct {
-	UserID primitive.ObjectID `json:"user_id,omitempty" bson:"user_id,omitempty"`
-	Role   Role               `json:"role,omitempty" bson:"role,omitempty"`
+type UpdateRoleRequest struct {
+	UserID string `json:"user_id,omitempty" bson:"user_id,omitempty"`
+	Role   Role   `json:"role,omitempty" bson:"role,omitempty"`
 }

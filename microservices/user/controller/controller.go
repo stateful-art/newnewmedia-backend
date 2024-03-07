@@ -69,6 +69,7 @@ func (c *UserController) GetUserByYouTubeID(ctx *fiber.Ctx) error {
 	user, err := c.userService.GetUserByYouTubeID(youtubeID)
 
 	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to get user"})
 
 	}
 
@@ -76,12 +77,18 @@ func (c *UserController) GetUserByYouTubeID(ctx *fiber.Ctx) error {
 }
 
 func (c *UserController) AddRole(ctx *fiber.Ctx) error {
-	var addRoleRequest dto.AddRoleRequest
+	var addRoleRequest dto.UpdateRoleRequest
+
 	if err := ctx.BodyParser(&addRoleRequest); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
 	}
 
-	if err := c.userService.AddRole(addRoleRequest.UserID, addRoleRequest.Role); err != nil {
+	userObjID, err := primitive.ObjectIDFromHex(addRoleRequest.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid userID format"})
+	}
+
+	if err := c.userService.AddRole(userObjID, addRoleRequest.Role); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to add role to user"})
 	}
 
@@ -89,58 +96,19 @@ func (c *UserController) AddRole(ctx *fiber.Ctx) error {
 }
 
 func (c *UserController) RemoveRole(ctx *fiber.Ctx) error {
-	var addRoleRequest dto.AddRoleRequest
-	if err := ctx.BodyParser(&addRoleRequest); err != nil {
+	var removeRoleRequest dto.UpdateRoleRequest
+	if err := ctx.BodyParser(&removeRoleRequest); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
 	}
 
-	if err := c.userService.RemoveRole(addRoleRequest.UserID, addRoleRequest.Role); err != nil {
+	userObjID, err := primitive.ObjectIDFromHex(removeRoleRequest.UserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid userID format"})
+	}
+
+	if err := c.userService.RemoveRole(userObjID, removeRoleRequest.Role); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to remove role from user"})
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Role removed from user successfully"})
 }
-
-// func (c *UserController) AddRole(ctx *fiber.Ctx) error {
-// 	userID := ctx.Params("id")
-// 	objectID, err := primitive.ObjectIDFromHex(userID)
-// 	if err != nil {
-// 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid user ID"})
-// 	}
-
-// 	var role struct {
-// 		Role string `json:"role"`
-// 	}
-// 	if err := ctx.BodyParser(&role); err != nil {
-// 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
-// 	}
-
-// 	// Call the service function to add role to user
-// 	if err := c.userService.AddRole(objectID, dao.Role(role.Role)); err != nil {
-// 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to add role to user"})
-// 	}
-
-// 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Role added to user successfully"})
-// }
-
-// func (c *UserController) RemoveRole(ctx *fiber.Ctx) error {
-// 	userID := ctx.Params("id")
-// 	objectID, err := primitive.ObjectIDFromHex(userID)
-// 	if err != nil {
-// 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid user ID"})
-// 	}
-
-// 	var role struct {
-// 		Role string `json:"role"`
-// 	}
-// 	if err := ctx.BodyParser(&role); err != nil {
-// 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
-// 	}
-
-// 	// Call the service function to remove role from user
-// 	if err := c.userService.RemoveRole(objectID, dao.Role(role.Role)); err != nil {
-// 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to remove role from user"})
-// 	}
-
-// 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Role removed from user successfully"})
-// }
