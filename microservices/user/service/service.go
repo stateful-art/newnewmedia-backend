@@ -2,24 +2,61 @@ package service
 
 import (
 	"errors"
+	"time"
 
+	"github.com/nats-io/nats.go"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	utils "newnew.media/commons/utils"
 	"newnew.media/microservices/user/dao"
 	"newnew.media/microservices/user/dto"
-
 	repository "newnew.media/microservices/user/repository"
 )
 
 type UserService struct {
-	userRepo *repository.UserRepository
+	userRepo    *repository.UserRepository
+	redisClient *redis.Client
+	natsClient  *nats.Conn
 }
 
-func NewUserService(userRepo *repository.UserRepository) *UserService {
-	return &UserService{userRepo: userRepo}
+func NewUserService(userRepo *repository.UserRepository, redisClient *redis.Client, natsClient *nats.Conn) *UserService {
+	return &UserService{userRepo: userRepo, redisClient: redisClient, natsClient: natsClient}
 }
 
-func (s *UserService) CreateUser(user dao.User) error {
-	return s.userRepo.CreateUser(user)
+func (s *UserService) CreateUser(user dto.CreateUserRequest) error {
+	// Check if a user with the same email or Spotify ID already exists
+	if err := s.checkExistingUser(user); err != nil {
+		return err
+	}
+	newUser := dao.User{
+		Email:         user.Email,
+		Password:      user.Password,
+		City:          user.City,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+		EmailVerified: false, // Assuming EmailVerified should initially be false
+	}
+
+	// Set SpotifyID if provided
+	if user.SpotifyID != "" {
+		newUser.SpotifyID = user.SpotifyID
+	}
+
+	if user.Email != "" {
+		err := utils.SendNATSmessage(s.natsClient, "user-registered", user.Email)
+
+		if err != nil {
+			newUser.EmailSent = false
+			return errors.New("failed to send msg to nats")
+		}
+		newUser.EmailSent = true
+	}
+
+	// Create user in the repository
+	if err := s.userRepo.CreateUser(newUser); err != nil {
+		return err // Return error if user creation fails
+	}
+	return nil
 }
 
 func (s *UserService) GetUserByID(id primitive.ObjectID) (dao.User, error) {
@@ -81,4 +118,24 @@ func isValidRole(role dto.Role) bool {
 	default:
 		return false
 	}
+}
+
+func (s *UserService) checkExistingUser(user dto.CreateUserRequest) error {
+	if user.Email != "" {
+		_, err := s.userRepo.GetUserByEmail(user.Email)
+		if err == nil {
+			// User with the same email already exists
+			return errors.New("user with the same email already exists")
+		}
+	}
+
+	if user.SpotifyID != "" {
+		_, err := s.userRepo.GetUserBySpotifyID(user.SpotifyID)
+		if err == nil {
+			// User with the same Spotify ID already exists
+			return errors.New("user with the same Spotify ID already exists")
+		}
+	}
+
+	return nil
 }

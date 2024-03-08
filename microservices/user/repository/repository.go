@@ -24,6 +24,7 @@ func NewUserRepository() *UserRepository {
 
 // CreateUser inserts a new user into the database.
 func (ur *UserRepository) CreateUser(user dao.User) error {
+
 	user.ID = primitive.NewObjectID()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
@@ -69,7 +70,19 @@ func (ur *UserRepository) GetUsers() ([]dao.User, error) {
 	return users, nil
 }
 
-// GetUserBySpotifyID retrieves a user by their Spotify ID.
+func (ur *UserRepository) GetUserByEmail(email string) (dao.User, error) {
+	var user dao.User
+
+	filter := bson.M{"email": email}
+
+	err := collections.UsersCollection.FindOne(context.Background(), filter).Decode(&user)
+	if err != nil {
+		return dao.User{}, err
+	}
+
+	return user, nil
+}
+
 func (ur *UserRepository) GetUserBySpotifyID(spotifyID string) (dao.User, error) {
 	var user dao.User
 
@@ -210,5 +223,17 @@ func (ur *UserRepository) RemoveUserRole(userID primitive.ObjectID, role dao.Rol
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (ur *UserRepository) RollbackUserCreation(userID primitive.ObjectID) error {
+	filter := bson.M{"_id": userID}
+
+	// Delete the user document from the collection
+	_, err := collections.UsersCollection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

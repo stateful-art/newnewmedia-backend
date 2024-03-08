@@ -1,9 +1,14 @@
 package dto
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // User represents a user with basic information and connected Spotify/YouTube Music accounts
 type User struct {
+	ID             primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Email          string
 	Password       string
 	City           string
@@ -11,11 +16,17 @@ type User struct {
 	FavoritePlaces []string
 	SpotifyID      string
 	YouTubeID      string
+	CreatedAt      time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
+	UpdatedAt      time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
+	EmailSent      bool      `json:"email_sent,omitempty" bson:"email_sent,omitempty"`
+	EmailVerified  bool      `json:"email_verified,omitempty" bson:"email_verified,omitempty"`
 }
 
 type CreateUserRequest struct {
-	Email    string
-	Password string
+	Email     string
+	Password  string
+	City      string
+	SpotifyID string
 }
 
 type CreateUserResponse struct {

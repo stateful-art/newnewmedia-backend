@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
 	utils "newnew.media/commons/utils"
 	db "newnew.media/db"
@@ -23,10 +24,11 @@ import (
 	userroute "newnew.media/microservices/user/routes"
 )
 
-var StorageClient *storage.Client // Global variable to hold the GCS client instance
-var RedisClient *redis.Client     // Global variable to hold the Redis client instance// Initialize the GCS client during application startup
-func init() {
+var StorageClient *storage.Client
+var RedisClient *redis.Client
+var NatsClient *nats.Conn
 
+func init() {
 	if err := utils.LoadEnv(); err != nil {
 		log.Fatalf("Error loading environment variables: %v", err)
 	}
@@ -36,6 +38,17 @@ func init() {
 		log.Fatalf("Error connecting to MongoDB: %v", err)
 	}
 
+	// Initialize Google Cloud Storage client
+	initGoogleCloudStorage()
+
+	// Initialize Redis client
+	initRedis()
+
+	// Initialize NATS connection
+	initNATS()
+}
+
+func initGoogleCloudStorage() {
 	// Set the path to your credentials file
 	credentialsFile := filepath.FromSlash("creds/creds.json")
 
@@ -50,39 +63,46 @@ func init() {
 	}
 	StorageClient = client
 	log.Println("Google Storage: OK")
+}
 
-	// Initialize Redis client with retry logic
+func initRedis() {
 	redisCtx := context.Background()
-	// var redisOptions *redis.Options
 	var redisErr error
-	for attempt := 1; attempt <= 3; attempt++ { // Retry 3 times with exponential backoff
+	for attempt := 1; attempt <= 3; attempt++ {
 		RedisClient, _, redisErr = connectToRedis(redisCtx)
 		if redisErr == nil {
-			log.Println("Redis : OK")
+			log.Println("Redis: OK")
 			break
 		}
 		log.Printf("Failed to connect to Redis (attempt %d): %v\n", attempt, redisErr)
-		time.Sleep(time.Duration(attempt) * time.Second) // Exponential backoff
+		time.Sleep(time.Duration(attempt) * time.Second)
 	}
 	if redisErr != nil {
 		log.Fatalf("Failed to connect to Redis after multiple attempts: %v", redisErr)
 	}
+}
 
-	// Optionally, you can log Redis client options
-	// log.Printf("Redis Client Options: %+v\n", redisOptions)
+func initNATS() {
+	natsOpts := nats.Options{
+		Servers: []string{os.Getenv("NATS_ADDRESS")},
+	}
+
+	var err error
+	NatsClient, err = natsOpts.Connect()
+	if err != nil {
+		log.Fatalf("Error connecting to NATS server: %v", err)
+	}
+	// defer NatsClient.Close()
 }
 
 func main() {
-	// if err := godotenv.Load(); err != nil {
-	// 	log.Println("No .env file found")
-	// }
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "*",
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders:     "x-spotify-token ,Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
-		ExposeHeaders:    "Content-Length,Access-Control-Allow-Headers", // Expose the required header
+		ExposeHeaders:    "Content-Length,Access-Control-Allow-Headers",
 		AllowCredentials: true,
 	}))
 	app.Use(logger.New())
@@ -103,18 +123,20 @@ func main() {
 	musicroute.MusicRoutes(music, StorageClient)
 	playlistroute.PlaylistRoutes(playlists)
 	revenueroute.RevenueRoutes(revenues)
-	userroute.UserRoutes(users)
-	communicationroutes.CommunicationRoutes(communications, RedisClient)
+	userroute.UserRoutes(users, RedisClient, NatsClient)
+	communicationroutes.CommunicationRoutes(communications, RedisClient, NatsClient)
 
 	log.Print("APP @ 3000 : OK")
 	log.Fatal(app.Listen(":3000"))
+	defer NatsClient.Close()
+
 }
 
 func connectToRedis(ctx context.Context) (*redis.Client, *redis.Options, error) {
 	options := &redis.Options{
-		Addr:     os.Getenv("REDIS_ADDRESS"), // Redis address
-		Password: "",                         // Redis password, if any
-		DB:       0,                          // Redis database index
+		Addr:     os.Getenv("REDIS_ADDRESS"),
+		Password: "",
+		DB:       0,
 	}
 	client := redis.NewClient(options)
 	if err := client.Ping(ctx).Err(); err != nil {

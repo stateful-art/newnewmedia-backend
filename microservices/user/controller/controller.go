@@ -3,7 +3,6 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"newnew.media/microservices/user/dao"
 	"newnew.media/microservices/user/dto"
 	"newnew.media/microservices/user/service"
 )
@@ -17,13 +16,13 @@ func NewUserController(userService *service.UserService) *UserController {
 }
 
 func (c *UserController) CreateUser(ctx *fiber.Ctx) error {
-	var user dao.User
+	var user dto.CreateUserRequest
 	if err := ctx.BodyParser(&user); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
 	}
 
 	if err := c.userService.CreateUser(user); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to create user"})
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": err.Error()})
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "User created successfully"})

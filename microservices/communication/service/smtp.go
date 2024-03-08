@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/smtp"
 	"os"
 	"time"
@@ -15,24 +14,22 @@ import (
 )
 
 type SMTPService struct {
+	redisClient *redis.Client
 }
 
-func NewSMTPService() *SMTPService {
-	return &SMTPService{}
+func NewSMTPService(redisClient *redis.Client) *SMTPService {
+	return &SMTPService{
+		redisClient: redisClient,
+	}
 }
 
-func (smtps *SMTPService) SendVerificationMail(email string, redisClient *redis.Client) (string, error) {
+func (smtps *SMTPService) SendVerificationMail(email string) (string, error) {
 
 	backendOrigin := os.Getenv("BACKEND_ORIGIN")
 	host := os.Getenv("SMTP_HOST")
 	port := os.Getenv("SMTP_PORT")
 	from := os.Getenv("SMTP_MAIL")
 	password := os.Getenv("SMTP_PASSWORD")
-
-	log.Println(host)
-	log.Println(port)
-	log.Println(from)
-	log.Println(password)
 
 	subject := "Please verify your email"
 	auth := smtp.PlainAuth("", from, password, host)
@@ -159,11 +156,12 @@ func (smtps *SMTPService) SendVerificationMail(email string, redisClient *redis.
 		return "", err
 	}
 
-	statusCMD := redisClient.Set(context.Background(),
-		verificationKey,
+	statusCMD := smtps.redisClient.Set(context.Background(),
+		fmt.Sprintf("%s:%s", REDIS_UNVERIFIED_EMAIL_PREFIX, verificationKey),
 		fmt.Sprintf("%v", email),
 		time.Duration(time.Hour*24),
 	)
+
 	if statusCMD.Err() != nil {
 		return "", statusCMD.Err()
 	}

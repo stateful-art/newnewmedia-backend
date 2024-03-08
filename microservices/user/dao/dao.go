@@ -18,6 +18,8 @@ type User struct {
 	YouTubeID      string
 	CreatedAt      time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	UpdatedAt      time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
+	EmailSent      bool      `json:"email_sent,omitempty" bson:"email_sent,omitempty"`
+	EmailVerified  bool      `json:"email_verified,omitempty" bson:"email_verified,omitempty"`
 }
 
 type Role string

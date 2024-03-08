@@ -2,9 +2,11 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/nats-io/nats.go"
 )
 
 // PrintError prints an error message
@@ -27,4 +29,33 @@ func LoadEnv() error {
 		return err
 	}
 	return nil
+}
+
+func SendNATSmessage(natsClient *nats.Conn, subject string, content string) error {
+	// Send a message with the subject
+	message := []byte(content)
+	if err := natsClient.Publish(subject, message); err != nil {
+		return err
+	}
+	log.Printf("Published message: %s\n", string(message))
+
+	// // Wait indefinitely to keep the program running
+	// select {}
+
+	return nil
+}
+
+func ReceiveNATSmessage(natsClient *nats.Conn, subject string) error {
+	// Subscribe to the subject to receive messages
+	sub, err := natsClient.Subscribe(subject, func(msg *nats.Msg) {
+		log.Printf("Received message: %s\n", string(msg.Data))
+	})
+	if err != nil {
+		return err
+	}
+	defer sub.Unsubscribe()
+
+	return nil
+	// // Wait indefinitely to keep the program running
+	// select {}
 }

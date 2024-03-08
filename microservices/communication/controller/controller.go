@@ -23,7 +23,7 @@ func (cc *CommunicationController) StartVerification(c *fiber.Ctx, redisClient *
 	}
 
 	// Fetch the audio file path for the given song ID
-	_, err := cc.smtpService.SendVerificationMail(email, redisClient)
+	_, err := cc.smtpService.SendVerificationMail(email)
 	if err != nil {
 		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{"message": "Could not send the email. Please try again later."})
 	}
