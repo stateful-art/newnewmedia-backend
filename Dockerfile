@@ -13,6 +13,9 @@ RUN go mod download
 # Copy the source code into the container
 COPY . .
 
+# Set the environment variables
+ENV ENVIRONMENT="dev"
+
 # Build the Go app
 RUN go build -o main .
 

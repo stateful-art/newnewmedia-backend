@@ -1,6 +1,13 @@
 version: '3'
 
 services:
+  nats-alpine:  # Define a new service for NATS Alpine
+    image: nats:alpine
+    ports:
+      - "4222:4222"  # Expose port 4222 for NATS
+    restart: always
+    networks:
+      - xxx
   redis-alpine:
     image: redis:alpine
     ports:
@@ -9,27 +16,26 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - redis-network  # Assign the Redis service to the redis-network
+      - xxx  # Assign the Redis service to the redis-network
 
   backend_fiber:
     image: golang:1.21.0-alpine
     build: .
     restart: always
     env_file:
-      - .env
-    environment:
-      - VIRTUAL_HOST=localhost
-      - VIRTUAL_PORT=3000
+      - .env.dev
+   
     expose:
       - "3000"
     depends_on:
       - redis-alpine  # Specify Redis Alpine as a dependency
+      - nats-alpine
     networks:
-      - redis-network  # Connect the backend_fiber service to the redis-network
+      - xxx  # Connect the backend_fiber service to the redis-network
 
 volumes:
   redis_data:
 
 networks:
-  redis-network:
+  xxx:
     driver: bridge
