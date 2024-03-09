@@ -2,20 +2,18 @@ package controller
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/redis/go-redis/v9"
 	service "newnew.media/microservices/communication/service"
 )
 
 type CommunicationController struct {
 	mailerService *service.MailerService
-	smtpService   *service.SMTPService
 }
 
-func NewCommunicationController(mailerService *service.MailerService, smtpService *service.SMTPService) *CommunicationController {
-	return &CommunicationController{mailerService: mailerService, smtpService: smtpService}
+func NewCommunicationController(mailerService *service.MailerService) *CommunicationController {
+	return &CommunicationController{mailerService: mailerService}
 }
 
-func (cc *CommunicationController) StartVerification(c *fiber.Ctx, redisClient *redis.Client) error {
+func (cc *CommunicationController) StartVerification(c *fiber.Ctx) error {
 	email := c.Query("email")
 
 	if email == "" {
@@ -23,15 +21,15 @@ func (cc *CommunicationController) StartVerification(c *fiber.Ctx, redisClient *
 	}
 
 	// Fetch the audio file path for the given song ID
-	_, err := cc.smtpService.SendVerificationMail(email)
+	_, err := cc.mailerService.SendVerificationEmail(email)
 	if err != nil {
 		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{"message": "Could not send the email. Please try again later."})
 	}
 	return c.SendStatus(fiber.StatusAccepted)
 }
 
-func (cc *CommunicationController) VerifyEmail(c *fiber.Ctx, redisClient *redis.Client) error {
-	error := cc.mailerService.VerifyEmail(c, redisClient)
+func (cc *CommunicationController) VerifyEmail(c *fiber.Ctx) error {
+	error := cc.mailerService.VerifyEmail(c)
 	if error != nil {
 		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{"message": "Could not send email"})
 	}

@@ -2,8 +2,10 @@ package communicationroutes
 
 import (
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/mailgun/mailgun-go/v4"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
 	controller "newnew.media/microservices/communication/controller"
@@ -11,9 +13,11 @@ import (
 )
 
 func CommunicationRoutes(app fiber.Router, redisClient *redis.Client, natsClient *nats.Conn) {
-	// Create an instance of PlaylistService with the PlaylistRepository
-	smtpService := service.NewSMTPService(redisClient)
-	mailerService := service.NewMailerService(smtpService, natsClient)
+	var domain string = os.Getenv("EMAIL_SENDER_DOMAIN")
+	var key string = os.Getenv("MAILGUN_APIKEY")
+
+	mailgun := mailgun.NewMailgun(domain, key)
+	mailerService := service.NewMailerService(mailgun, natsClient, redisClient)
 
 	// Subscribe to user-registered subject
 	if err := mailerService.SubscribeToUserRegisteredSubject(); err != nil {
@@ -21,14 +25,9 @@ func CommunicationRoutes(app fiber.Router, redisClient *redis.Client, natsClient
 	}
 
 	// Pass the PlaylistService instance to the PlaylistController
-	cc := controller.NewCommunicationController(mailerService, smtpService)
+	cc := controller.NewCommunicationController(mailerService)
 
-	app.Get("/send-verification-email", func(c *fiber.Ctx) error {
-		return cc.StartVerification(c, redisClient)
-	})
-
-	app.Get("/verify-email", func(c *fiber.Ctx) error {
-		return cc.VerifyEmail(c, redisClient)
-	})
+	app.Get("/send-verification-email", cc.StartVerification)
+	app.Get("/verify-email", cc.VerifyEmail)
 
 }

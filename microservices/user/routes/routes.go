@@ -12,7 +12,6 @@ import (
 func UserRoutes(app fiber.Router, redisClient *redis.Client, natsClient *nats.Conn) {
 	// Create an instance of PlaylistRepository
 	userRepo := repo.NewUserRepository()
-	// smtpService := communicationService.NewSMTPService(redisClient)
 	// Create an instance of PlaylistService with the PlaylistRepository
 	userService := service.NewUserService(userRepo, redisClient, natsClient)
 

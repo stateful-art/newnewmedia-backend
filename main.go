@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
+
 	utils "newnew.media/commons/utils"
 	db "newnew.media/db"
 	authroute "newnew.media/microservices/auth/routes"
@@ -32,6 +33,10 @@ func init() {
 	if err := utils.LoadEnv(); err != nil {
 		log.Fatalf("Error loading environment variables: %v", err)
 	}
+
+	// log.Print("SENDING EMAIL w MAILGUN...")
+
+	// commservice.SendEmail()
 
 	_, err := db.ConnectDB()
 	if err != nil {
@@ -92,6 +97,8 @@ func initNATS() {
 	if err != nil {
 		log.Fatalf("Error connecting to NATS server: %v", err)
 	}
+
+	log.Println("connected to NATS")
 	// defer NatsClient.Close()
 }
 
