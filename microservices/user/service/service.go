@@ -25,7 +25,7 @@ func NewUserService(userRepo *repository.UserRepository, redisClient *redis.Clie
 
 func (s *UserService) CreateUser(user dto.CreateUserRequest) error {
 	// Check if a user with the same email or Spotify ID already exists
-	if err := s.checkExistingUser(user); err != nil {
+	if err := s.CheckUserExists(user); err != nil {
 		return err
 	}
 	newUser := dao.User{
@@ -48,8 +48,9 @@ func (s *UserService) CreateUser(user dto.CreateUserRequest) error {
 		if err != nil {
 			newUser.EmailSent = false
 			return errors.New("failed to send msg to nats")
+		} else {
+			newUser.EmailSent = true
 		}
-		newUser.EmailSent = true
 	}
 
 	// Create user in the repository
@@ -61,6 +62,10 @@ func (s *UserService) CreateUser(user dto.CreateUserRequest) error {
 
 func (s *UserService) GetUserByID(id primitive.ObjectID) (dao.User, error) {
 	return s.userRepo.GetUserByID(id)
+}
+
+func (s *UserService) GetUserByEmail(email string) (dao.User, error) {
+	return s.userRepo.GetUserByEmail(email)
 }
 
 func (s *UserService) GetUsers() ([]dao.User, error) {
@@ -95,7 +100,7 @@ func (s *UserService) AddRole(userID primitive.ObjectID, role dto.Role) error {
 
 	// Validate the role
 	if !isValidRole(role) {
-		return errors.New("Invalid Role")
+		return errors.New("invalid Role")
 	}
 
 	userRole := dao.UserRole{
@@ -120,7 +125,7 @@ func isValidRole(role dto.Role) bool {
 	}
 }
 
-func (s *UserService) checkExistingUser(user dto.CreateUserRequest) error {
+func (s *UserService) CheckUserExists(user dto.CreateUserRequest) error {
 	if user.Email != "" {
 		_, err := s.userRepo.GetUserByEmail(user.Email)
 		if err == nil {

@@ -12,7 +12,16 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
 	service "newnew.media/microservices/auth/service" // Import your service package
+	userDTO "newnew.media/microservices/user/dto"
 )
+
+type AuthController struct {
+	emailAuthService *service.EmailAuthService
+}
+
+func NewAuthController(emailAuthService *service.EmailAuthService) *AuthController {
+	return &AuthController{emailAuthService: emailAuthService}
+}
 
 type SpotifyToken struct {
 	AccessToken  string `json:"access_token"`
@@ -22,7 +31,7 @@ type SpotifyToken struct {
 }
 
 // SpotifyLogin initiates the Spotify OAuth 2.0 authentication flow
-func SpotifyLogin(c *fiber.Ctx) error {
+func (ac *AuthController) SpotifyLogin(c *fiber.Ctx) error {
 	authURL, err := service.ConnectSpotify()
 	if err != nil {
 		// Handle error
@@ -33,7 +42,7 @@ func SpotifyLogin(c *fiber.Ctx) error {
 }
 
 // SpotifyCallback handles the callback from Spotify after user authorization
-func SpotifyCallback(c *fiber.Ctx, redisClient *redis.Client) error {
+func (ac *AuthController) SpotifyCallback(c *fiber.Ctx, redisClient *redis.Client) error {
 	code := c.Query("code")
 	if code == "" {
 		// Handle error
@@ -109,4 +118,39 @@ func storeSpotifyToken(redisClient *redis.Client, spotifyToken *service.SpotifyT
 	}
 
 	return nil
+}
+
+// EMAIL & Password register & logins
+
+// EmailRegistration handles the email registration process.
+func (ac *AuthController) EmailRegistration(c *fiber.Ctx) error {
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+
+	user := userDTO.CreateUserRequest{
+		Email:     email,
+		Password:  password,
+		SpotifyID: "",
+	}
+
+	status, err := ac.emailAuthService.RegisterUser(user)
+	if err != nil {
+		return c.JSON(fiber.Map{"status": status, "error": err.Error()})
+	}
+	return nil
+}
+
+// EmailLogin handles the email login process.
+func (ac *AuthController) EmailLogin(c *fiber.Ctx) error {
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+
+	token, err := ac.emailAuthService.LoginUser(email, password)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	} else {
+
+		return c.JSON(userDTO.LoginUserResponse{Email: email, Token: token, RefreshToken: ""})
+	}
+
 }

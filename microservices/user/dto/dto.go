@@ -30,10 +30,15 @@ type CreateUserRequest struct {
 }
 
 type CreateUserResponse struct {
-	Email     string
-	SpotifyID string
-	Token     string
+	Status bool
 }
+
+type LoginUserResponse struct {
+	Email        string
+	Token        string
+	RefreshToken string
+}
+
 type Role string
 
 const (

@@ -125,7 +125,7 @@ func main() {
 	users := app.Group("/users")
 	communications := app.Group("/comms")
 
-	authroute.AuthRoutes(auth, StorageClient, RedisClient)
+	authroute.AuthRoutes(auth, StorageClient, RedisClient, NatsClient)
 	placesroute.PlaceRoutes(places)
 	musicroute.MusicRoutes(music, StorageClient)
 	playlistroute.PlaylistRoutes(playlists)
@@ -133,6 +133,12 @@ func main() {
 	userroute.UserRoutes(users, RedisClient, NatsClient)
 	communicationroutes.CommunicationRoutes(communications, RedisClient, NatsClient)
 
+	// // below protected. Require an Authorization Bearer <token> to access.
+	// app.Use(authroute.JWTSignerMiddleware("xyz"))
+	// // Example of a protected route
+	// app.Get("/protected", func(c *fiber.Ctx) error {
+	// 	return c.SendString("Welcome to the protected area!")
+	// })
 	log.Print("APP @ 3000 : OK")
 	log.Fatal(app.Listen(":3000"))
 	defer NatsClient.Close()
