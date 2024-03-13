@@ -31,7 +31,6 @@ func (eas *EmailAuthService) RegisterUser(user dto.CreateUserRequest) (bool, err
 
 	// // Create a new user with the hashed password
 	user.Password = hashedPassword
-
 	error := eas.userService.CreateUser(user)
 
 	return error == nil, error

@@ -20,7 +20,6 @@ func (cc *CommunicationController) StartVerification(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Email parameter is required"})
 	}
 
-	// Fetch the audio file path for the given song ID
 	_, err := cc.mailerService.SendVerificationEmail(email)
 	if err != nil {
 		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{"message": "Could not send the email. Please try again later."})
