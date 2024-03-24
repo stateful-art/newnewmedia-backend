@@ -54,6 +54,11 @@ type UserRoles struct {
 	Roles  []Role             `bson:"role"`
 }
 
+type SpotifyUserRoles struct {
+	UserID primitive.ObjectID `bson:"user_id"`
+	Roles  []Role             `bson:"role"`
+}
+
 type UpdateRoleRequest struct {
 	UserID string `json:"user_id,omitempty" bson:"user_id,omitempty"`
 	Role   Role   `json:"role,omitempty" bson:"role,omitempty"`

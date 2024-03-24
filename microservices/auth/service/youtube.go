@@ -47,8 +47,8 @@ func HandleYouTubeMusicCallback(code string) error {
 		RedirectURL:  youtubeRedirectURI,
 		Scopes:       []string{youtube.YoutubeReadonlyScope},
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://accounts.google.com/o/oauth2/auth",
-			TokenURL: "https://oauth2.googleapis.com/token",
+			AuthURL:  youtubeAuthURL,
+			TokenURL: youtubeTokenURL,
 		},
 	}
 

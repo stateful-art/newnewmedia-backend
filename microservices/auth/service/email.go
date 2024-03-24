@@ -3,7 +3,8 @@ package service
 import (
 	"errors"
 	// Import your user model and database connection
-	dto "newnew.media/microservices/user/dto"
+
+	userDTO "newnew.media/microservices/user/dto"
 	userService "newnew.media/microservices/user/service"
 )
 
@@ -16,7 +17,7 @@ func NewEmailAuthService(userService *userService.UserService) *EmailAuthService
 }
 
 // RegisterUser registers a new user.
-func (eas *EmailAuthService) RegisterUser(user dto.CreateUserRequest) (bool, error) {
+func (eas *EmailAuthService) RegisterUser(user userDTO.CreateUserRequest) (bool, error) {
 	// Check if the user already exists
 	err := eas.userService.CheckUserExists(user)
 	if err != nil {
@@ -43,13 +44,27 @@ func (eas *EmailAuthService) LoginUser(email, password string) (string, error) {
 		return "", err
 	}
 
+	if !user.EmailVerified {
+		return "", errors.New("please verify your email")
+	}
 	// Verify the password
 	if !CheckPasswordHash(password, user.Password) {
 		return "", errors.New("invalid password")
 	}
-
+	userRoles, err := eas.userService.GetUserRoles(user.ID)
+	if err != nil {
+		return "", err
+	}
+	// var roles []userDAO.Role
+	// roles = append(roles, userDAO.Audience)
 	// Generate a JWT token for the user
-	token, err := GenerateJWTToken(&user)
+
+	var roles []string
+	for _, userRole := range userRoles {
+		roles = append(roles, string(userRole.Role))
+	}
+
+	token, err := GenerateJWTToken(&user, roles)
 	if err != nil {
 		return "", err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 
 	"cloud.google.com/go/storage"
@@ -48,7 +49,7 @@ func GetSong(songID string) (dto.MusicRetrieve, error) {
 
 	// Create a DTO instance
 	song := dto.MusicRetrieve{
-		ID:     dao.ID,
+		ID:     dao.ID.Hex(),
 		Name:   dao.Name,
 		Artist: dao.Artist,
 		Path:   dao.Path,
@@ -70,16 +71,16 @@ func GetMusicByPlace(id string) ([]dao.Song, error) {
 	return music, nil
 }
 
-func CreateMusic(c *fiber.Ctx, musicPayload dto.MusicCreate, audioFile *multipart.FileHeader, storageClient *storage.Client) error {
+func CreateMusic(c *fiber.Ctx, musicPayload dto.CreateMusic, audioFile *multipart.FileHeader, storageClient *storage.Client) (dto.MusicRetrieve, error) {
 	// Validate if the music payload contains the necessary fields
 	if musicPayload.Name == "" || musicPayload.Artist == "" {
-		return fmt.Errorf("Name and Artist are required")
+		return dto.MusicRetrieve{}, fmt.Errorf("name and Artist are required")
 	}
 
 	// Open the uploaded audio file
 	audioFileContent, err := audioFile.Open()
 	if err != nil {
-		return err
+		return dto.MusicRetrieve{}, err
 	}
 	defer audioFileContent.Close()
 
@@ -87,21 +88,31 @@ func CreateMusic(c *fiber.Ctx, musicPayload dto.MusicCreate, audioFile *multipar
 	storageBucket := "n2media-music"
 	objectName := fmt.Sprintf("%s.mp3", primitive.NewObjectID().Hex()) // Generate a unique object name
 	if err := storeMusicFileInGCS(c.Context(), storageBucket, objectName, audioFileContent, storageClient); err != nil {
-		return err
+		return dto.MusicRetrieve{}, err
 	}
 	// Store the music details in MongoDB
 	music := dao.Song{
 		Name:   musicPayload.Name,
 		Artist: musicPayload.Artist,
 		Path:   fmt.Sprintf("gs://%s/%s", storageBucket, objectName), // GCS object path
+		Genres: musicPayload.Genres,
 		// Add additional fields if needed
 	}
-
-	if err := repository.CreateMusic(music); err != nil {
-		return err
+	log.Print(music)
+	var song dao.Song
+	if song, err = repository.CreateMusic(music); err != nil {
+		return dto.MusicRetrieve{}, err
 	}
 
-	return nil
+	createSongDTO := dto.MusicRetrieve{
+		ID:     song.ID.Hex(),
+		Name:   song.Name,
+		Artist: song.Artist,
+		Path:   song.Path,
+		Genres: song.Genres,
+	}
+
+	return createSongDTO, nil
 }
 
 // storeMusicFileInGCS stores the music file in Google Cloud Storage

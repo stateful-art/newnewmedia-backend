@@ -35,3 +35,9 @@ func JWTSignerMiddleware(secret string) fiber.Handler {
 		SigningKey: []byte(secret),
 	})
 }
+
+func SpotifyJWTSignerMiddleware(secret string) fiber.Handler {
+	return jwtware.New(jwtware.Config{
+		SigningKey: []byte(secret),
+	})
+}

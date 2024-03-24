@@ -45,6 +45,20 @@ func SendNATSmessage(natsClient *nats.Conn, subject string, content string) erro
 	return nil
 }
 
+// func SendNATSmessageToElastic(natsClient *nats.Conn, subject string, place dto.Place) error {
+// 	// Send a message with the subject
+// 	message := []byte(place)
+// 	if err := natsClient.Publish(subject, message); err != nil {
+// 		return err
+// 	}
+// 	log.Printf("Published message: %v\n", dto.Place(message))
+
+// 	// // Wait indefinitely to keep the program running
+// 	// select {}
+
+// 	return nil
+// }
+
 func ReceiveNATSmessage(natsClient *nats.Conn, subject string) error {
 	// Subscribe to the subject to receive messages
 	sub, err := natsClient.Subscribe(subject, func(msg *nats.Msg) {

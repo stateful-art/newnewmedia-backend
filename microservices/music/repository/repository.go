@@ -10,13 +10,20 @@ import (
 	dao "newnew.media/microservices/music/dao"
 )
 
-func CreateMusic(music dao.Song) error {
-
-	_, err := collections.MusicCollection.InsertOne(context.Background(), music)
+func CreateMusic(music dao.Song) (dao.Song, error) {
+	// Insert the music document into the collection
+	insertResult, err := collections.MusicCollection.InsertOne(context.Background(), music)
 	if err != nil {
-		return err
+		return dao.Song{}, err
 	}
-	return nil
+	id := insertResult.InsertedID.(primitive.ObjectID)
+
+	song, err := GetMusicById(id)
+	if err != nil {
+		return dao.Song{}, err
+	}
+
+	return song, nil
 }
 
 func GetMusicByPlace(id *primitive.ObjectID) ([]dao.Song, error) {

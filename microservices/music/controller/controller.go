@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"strings"
@@ -62,8 +63,10 @@ func PlayMusic(c *fiber.Ctx, storageClient *storage.Client) error {
 }
 
 func CreateMusic(c *fiber.Ctx, storageClient *storage.Client) error {
-	var musicPayload dto.MusicCreate
+	var musicPayload dto.CreateMusic
 
+	log.Print("received song to create @ controller...")
+	log.Print(musicPayload)
 	// Parse the request body into musicPayload
 	if err := c.BodyParser(&musicPayload); err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -78,17 +81,40 @@ func CreateMusic(c *fiber.Ctx, storageClient *storage.Client) error {
 			"message": "Audio file is required",
 		})
 	}
+	// // Get the genres field as a string
+	// genresString := c.FormValue("genres")
+	// if genresString != "" {
+	// 	// Split the genres string into an array
+	// 	musicPayload.Genres = strings.Split(genresString, ",")
+	// }
 
+	// Get the genres field as a string
+	genresString := c.FormValue("genres")
+	if genresString != "" {
+		// Attempt to unmarshal the genres string into an array
+		var genresArray []string
+		err := json.Unmarshal([]byte(genresString), &genresArray)
+		if err != nil {
+			return c.Status(400).JSON(fiber.Map{
+				"message": "Invalid genres format",
+			})
+		}
+		musicPayload.Genres = genresArray
+	}
+
+	log.Print("calling music service.createMusic")
 	// Create music entry and store the music file
-	err = service.CreateMusic(c, musicPayload, audioFile, storageClient)
+	var song dto.MusicRetrieve
+	song, err = service.CreateMusic(c, musicPayload, audioFile, storageClient)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"message": err.Error(),
 		})
 	}
 
-	return c.JSON(fiber.Map{
+	return c.Status(200).JSON(fiber.Map{
 		"message": "Music created successfully",
+		"data":    song,
 	})
 }
 

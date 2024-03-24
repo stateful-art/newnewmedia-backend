@@ -1,13 +1,17 @@
 package musicroutes
 
 import (
+	"log"
+
 	"cloud.google.com/go/storage"
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 	controller "newnew.media/microservices/music/controller"
 )
 
-func MusicRoutes(app fiber.Router, storageClient *storage.Client) {
+func MusicRoutes(app fiber.Router, storageClient *storage.Client, redisClient *redis.Client) {
 	app.Post("/", func(c *fiber.Ctx) error {
+		log.Print("@ / route, about to call controller.CreateMusic(c, storageClient) ")
 		return controller.CreateMusic(c, storageClient)
 	})
 

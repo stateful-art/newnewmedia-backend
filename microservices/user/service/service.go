@@ -29,7 +29,6 @@ func (s *UserService) CreateUser(user dto.CreateUserRequest) error {
 		return err
 	}
 	newUser := dao.User{
-		Email:         user.Email,
 		Password:      user.Password,
 		City:          user.City,
 		CreatedAt:     time.Now(),
@@ -43,6 +42,7 @@ func (s *UserService) CreateUser(user dto.CreateUserRequest) error {
 	}
 
 	if user.Email != "" {
+		newUser.Email = user.Email
 		err := utils.SendNATSmessage(s.natsClient, "user-registered", user.Email)
 
 		if err != nil {
@@ -68,6 +68,7 @@ func (s *UserService) GetUserByEmail(email string) (dao.User, error) {
 	return s.userRepo.GetUserByEmail(email)
 }
 
+// get all users
 func (s *UserService) GetUsers() ([]dao.User, error) {
 	return s.userRepo.GetUsers()
 }
@@ -96,6 +97,14 @@ func (s *UserService) DeleteUser(id primitive.ObjectID) error {
 	return s.userRepo.DeleteUser(id)
 }
 
+func (s *UserService) GetUserRoles(id primitive.ObjectID) ([]dao.UserRole, error) {
+	userRoles, err := s.userRepo.GetUserRoles(id)
+	if err != nil {
+		return []dao.UserRole{}, errors.New("could not get user roles")
+	}
+	return userRoles, nil
+}
+
 func (s *UserService) AddRole(userID primitive.ObjectID, role dto.Role) error {
 
 	// Validate the role
@@ -107,6 +116,8 @@ func (s *UserService) AddRole(userID primitive.ObjectID, role dto.Role) error {
 		UserID: userID,
 		Role:   dao.Role(role),
 	}
+	// since we're checking userRoles on emailLogin,
+	// we'll add the new role to user'd JWT on their next login.
 	return s.userRepo.AddUserRole(userRole)
 }
 
@@ -118,6 +129,9 @@ func (s *UserService) RemoveRole(userID primitive.ObjectID, role dto.Role) error
 // Function to validate role
 func isValidRole(role dto.Role) bool {
 	switch role {
+	// SEC TODO: // remove dto.Admin later
+	// case dto.Audience, dto.Artist, dto.Place, dto.Admin, dto.Crew:
+
 	case dto.Audience, dto.Artist, dto.Place, dto.Admin, dto.Crew:
 		return true
 	default:
@@ -127,16 +141,14 @@ func isValidRole(role dto.Role) bool {
 
 func (s *UserService) CheckUserExists(user dto.CreateUserRequest) error {
 	if user.Email != "" {
-		_, err := s.userRepo.GetUserByEmail(user.Email)
-		if err == nil {
+		if _, err := s.userRepo.GetUserByEmail(user.Email); err == nil {
 			// User with the same email already exists
 			return errors.New("user with the same email already exists")
 		}
 	}
 
 	if user.SpotifyID != "" {
-		_, err := s.userRepo.GetUserBySpotifyID(user.SpotifyID)
-		if err == nil {
+		if _, err := s.userRepo.GetUserBySpotifyID(user.SpotifyID); err == nil {
 			// User with the same Spotify ID already exists
 			return errors.New("user with the same Spotify ID already exists")
 		}

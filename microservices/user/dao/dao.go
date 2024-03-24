@@ -22,6 +22,14 @@ type User struct {
 	EmailVerified  bool      `json:"email_verified,omitempty" bson:"email_verified,omitempty"`
 }
 
+type SpotifyToken struct {
+	AccessToken  string    `json:"access_token"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	RefreshToken string    `json:"refresh_token"`
+	SpotifyID    string    `json:"spotify_id"`
+	Email        string    `json:"spotify_email"`
+}
+
 type Role string
 
 const (

@@ -74,14 +74,17 @@ func NewSpotifyAuthService(natsClient *nats.Conn, redisClient *redis.Client, use
 	return &SpotifyAuthService{natsClient: natsClient, redisClient: redisClient, userService: userService, config: spotifyOAuthConfig(), tokens: make(map[string]*oauth2.Token)}
 }
 
+// TODO: if the user's spotify access token is still valid,
+// just return it so does not exchange with spotify oauth2 for another access token.
+
 // ConnectSpotify initiates the Spotify OAuth 2.0 authentication flow
 func (sas *SpotifyAuthService) ConnectSpotify() (string, error) {
-	// spotifyConfig := sas.config
 	// Generate authorization URL
 	authURL := sas.config.AuthCodeURL("state", oauth2.AccessTypeOffline)
 
 	return authURL, nil
 }
+
 func (sas *SpotifyAuthService) HandleSpotifyCallback(c *fiber.Ctx, code string) (*SpotifyToken, error) {
 	// Exchange authorization code for access token
 	token, err := sas.config.Exchange(context.Background(), code)
@@ -89,19 +92,18 @@ func (sas *SpotifyAuthService) HandleSpotifyCallback(c *fiber.Ctx, code string) 
 		return nil, err
 	}
 
-	user, _ := sas.getCurrentUser(token)
+	// get currently signed-in Spotify user.
+	user, err := sas.getCurrentUser(token)
 	if err != nil {
-		// Handle error
 		log.Println("error parsing expiry on received token from spotify..")
 		panic(err)
 	}
 
-	// Create a SpotifyToken struct
 	spotifyToken := &SpotifyToken{
-		AccessToken:  token.AccessToken,
-		ExpiresAt:    token.Expiry,
-		RefreshToken: token.RefreshToken,
 		SpotifyID:    user.ID,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		ExpiresAt:    token.Expiry,
 	}
 
 	// Store token for future refresh
@@ -122,20 +124,17 @@ func (sas *SpotifyAuthService) HandleSpotifyCallback(c *fiber.Ctx, code string) 
 		City:      "",
 	}
 
-	// if already a spotify logged-in user, just log them in without creating a user for them.
+	// if already a registered spotify user,
+	// just log them in without creating a new user.
 	if err := sas.userService.CheckUserExists(newUser); err != nil {
-		log.Printf("This spotify user [ %s ] is already on our platform", newUser.SpotifyID)
 		return spotifyToken, nil
 	}
 
-	log.Printf("creating user registered with ")
 	error := sas.userService.CreateUser(newUser)
 
 	if error != nil {
 		return nil, err
 	} else {
-		log.Printf("new user created with spotify login...")
-
 		return spotifyToken, nil
 	}
 
@@ -156,8 +155,6 @@ func (sas *SpotifyAuthService) refreshToken() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		log.Printf("Just checking tokens.. now >> %s", time.Now().String())
-
 		sas.mu.Lock()
 		for spotifyID := range sas.tokens {
 			token, err := sas.getRefreshToken(spotifyID)
@@ -166,7 +163,8 @@ func (sas *SpotifyAuthService) refreshToken() {
 				continue
 			}
 
-			expiry, err := sas.getTokenExpiry(spotifyID)
+			expiry, err := sas.GetTokenExpiry(spotifyID)
+
 			if err != nil {
 				log.Printf("Error getting token expiry for Spotify ID %s: %v", spotifyID, err)
 				continue
@@ -174,11 +172,15 @@ func (sas *SpotifyAuthService) refreshToken() {
 
 			// Only refresh token if it's about to expire
 			if token == nil || time.Until(expiry) < time.Minute {
-				newAccessToken, newRefreshToken, _ := sas.refreshAccessToken(token.RefreshToken)
+				newAccessToken, err := sas.refreshAccessToken(token.RefreshToken)
+				if err != nil {
+					log.Printf("error getting newAccessToken with token.refreshToken : [ %s ]", token.RefreshToken)
+				}
 
+				log.Printf("here is the new AT: %s \n", newAccessToken)
 				var spotifyToken = SpotifyToken{
 					AccessToken:  newAccessToken,
-					RefreshToken: newRefreshToken,
+					RefreshToken: token.RefreshToken,
 					ExpiresAt:    time.Now().Add(time.Hour),
 					SpotifyID:    spotifyID,
 					Email:        "", // Add email if available
@@ -186,21 +188,25 @@ func (sas *SpotifyAuthService) refreshToken() {
 
 				data, err := json.Marshal(spotifyToken)
 				if err != nil {
-					log.Println("hey")
+					log.Println("marshalled from token type: SpotifyToken")
 				}
 
 				var token oauth2.Token
+
 				if err := json.Unmarshal(data, &token); err != nil {
-					log.Print("hello")
+					log.Println("unmarshalled into token type: *oauth2.Token")
 				}
 
 				sas.tokens[spotifyID] = &token
+				log.Printf("stored as sas.tokens[ %s ] ", spotifyID)
 
 				// Update token in Redis
 				if err := sas.storeSpotifyToken(&spotifyToken); err != nil {
 					log.Printf("Error updating token in Redis for Spotify ID %s: %v", spotifyID, err)
 					continue
 				}
+				log.Printf("new token for spotifyId:%s stored to redis.\n", spotifyID)
+
 			}
 		}
 		sas.mu.Unlock()
@@ -224,7 +230,7 @@ func (sas *SpotifyAuthService) getRefreshToken(spotifyID string) (*oauth2.Token,
 	return &token, nil
 }
 
-func (sas *SpotifyAuthService) getTokenExpiry(spotifyID string) (time.Time, error) {
+func (sas *SpotifyAuthService) GetTokenExpiry(spotifyID string) (time.Time, error) {
 	key := "spotify:" + spotifyID
 	tokenJSON, err := sas.redisClient.Get(context.Background(), key).Bytes()
 	if err != nil {
@@ -253,6 +259,10 @@ func (sas *SpotifyAuthService) StartTokenRefresher() {
 
 // storeSpotifyToken stores the Spotify token in Redis
 func (sas *SpotifyAuthService) storeSpotifyToken(spotifyToken *SpotifyToken) error {
+
+	log.Println("this is the tokenJSON went to redis::")
+	log.Print(spotifyToken)
+
 	// Check if redisClient is nil
 	if sas.redisClient == nil {
 		return errors.New("redisClient is nil")
@@ -267,12 +277,10 @@ func (sas *SpotifyAuthService) storeSpotifyToken(spotifyToken *SpotifyToken) err
 
 	// Set the Spotify token in Redis with SpotifyID as the key
 	key := "spotify:" + spotifyToken.SpotifyID
-	log.Printf("added %s key to redis.", key)
-
+	log.Printf("added %s key to redis. \n", key)
 	if err := sas.redisClient.Set(context.Background(), key, tokenJSON, 0).Err(); err != nil {
 		// Log error
 		log.Println("Error setting Spotify token in Redis:", err)
-
 		return err
 	}
 
@@ -283,7 +291,6 @@ func (sas *SpotifyAuthService) getCurrentUser(token *oauth2.Token) (*spotify.Pri
 	client := sas.config.Client(context.Background(), token)
 	spotifyClient := spotify.NewClient(client)
 
-	// Retrieve user's Spotify ID
 	user, err := spotifyClient.CurrentUser()
 	if err != nil {
 		return nil, err
@@ -291,7 +298,7 @@ func (sas *SpotifyAuthService) getCurrentUser(token *oauth2.Token) (*spotify.Pri
 	return user, nil
 }
 
-func (sas *SpotifyAuthService) refreshAccessToken(refreshToken string) (string, string, error) {
+func (sas *SpotifyAuthService) refreshAccessToken(refreshToken string) (string, error) {
 	data := "grant_type=refresh_token&refresh_token=" + refreshToken
 
 	auth := spotifyClientID + ":" + spotifyClientSecret
@@ -312,22 +319,22 @@ func (sas *SpotifyAuthService) refreshAccessToken(refreshToken string) (string, 
 	client := &fasthttp.Client{}
 	if err := client.Do(req, resp); err != nil {
 		log.Println("Error making POST request:", err)
-		return "", "", err
+		return "", err
 	}
 
 	if resp.StatusCode() != fasthttp.StatusOK {
 		log.Println("Error: Request failed with status code:", resp.StatusCode())
-		return "", "", fmt.Errorf("request failed with status code: %d", resp.StatusCode())
+		return "", fmt.Errorf("request failed with status code: %d", resp.StatusCode())
 	}
 
 	var response struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
 	}
+
 	if err := json.Unmarshal(resp.Body(), &response); err != nil {
 		log.Println("Error decoding response body:", err)
-		return "", "", err
+		return "", err
 	}
-
-	return response.AccessToken, response.RefreshToken, nil
+	return response.AccessToken, nil
 }

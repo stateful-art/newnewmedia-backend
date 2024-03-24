@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"log"
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	service "newnew.media/microservices/communication/service"
 )
@@ -32,5 +35,8 @@ func (cc *CommunicationController) VerifyEmail(c *fiber.Ctx) error {
 	if error != nil {
 		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{"message": "Could not send email"})
 	}
+
+	log.Print("Email verification done. Redirecting to login page..")
+	c.Redirect(os.Getenv("WEBAPP_LOGIN_URL"), fiber.StatusContinue)
 	return nil
 }

@@ -85,14 +85,12 @@ func (ur *UserRepository) GetUserByEmail(email string) (dao.User, error) {
 
 func (ur *UserRepository) GetUserBySpotifyID(spotifyID string) (dao.User, error) {
 	var user dao.User
-
-	filter := bson.M{"spotifyID": spotifyID}
+	filter := bson.M{"spotifyid": spotifyID}
 
 	err := collections.UsersCollection.FindOne(context.Background(), filter).Decode(&user)
 	if err != nil {
 		return dao.User{}, err
 	}
-
 	return user, nil
 }
 
@@ -205,6 +203,28 @@ func (ur *UserRepository) generateUpdateQuery(user dao.User) bson.M {
 	update["$set"].(bson.M)["updatedAt"] = time.Now()
 
 	return update
+}
+func (ur *UserRepository) GetUserRoles(userID primitive.ObjectID) ([]dao.UserRole, error) {
+	var userRoles []dao.UserRole
+	filter := bson.M{"user_id": userID}
+
+	cursor, err := collections.UserRolesCollection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	if !cursor.Next(context.Background()) {
+		// No roles found for the user, return an empty slice
+		return []dao.UserRole{}, nil
+	}
+
+	err = cursor.Decode(&userRoles)
+	if err != nil {
+		return nil, err
+	}
+
+	return userRoles, nil
 }
 
 // AddUserRole adds a role to the user.

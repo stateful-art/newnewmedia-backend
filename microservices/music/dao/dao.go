@@ -4,17 +4,17 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 // TODO: Update this as "Song"
 type Song struct {
-	ID     string               `json:"id,omitempty" bson:"_id,omitempty"`
-	Name   string               `json:"name"`
-	Artist string               `json:"artist"`
-	Path   string               `json:"path"`
-	Genres []primitive.ObjectID `bson:"genres"`
+	ID     primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Name   string             `json:"name"`
+	Artist string             `json:"artist"`
+	Path   string             `json:"path"`
+	Genres []string           `bson:"genres"`
 }
 
-type Genre struct {
-	ID   primitive.ObjectID `bson:"_id,omitempty"`
-	Name string             `bson:"name"`
-}
+// type Genre struct {
+// 	ID   primitive.ObjectID `bson:"_id,omitempty"`
+// 	Name string             `bson:"name"`
+// }
 
 type QueueSong struct {
 	SongID       primitive.ObjectID `bson:"song_id"`

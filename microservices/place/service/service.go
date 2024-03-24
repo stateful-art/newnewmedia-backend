@@ -12,6 +12,8 @@ func CreatePlace(c *fiber.Ctx, place dto.Place) error {
 	if err != nil {
 		return err
 	}
+
+	// send a msg to NATS to index to Elasticsearch
 	return nil
 }
 

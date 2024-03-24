@@ -1,12 +1,15 @@
 package service
 
 import (
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 	dao "newnew.media/microservices/user/dao"
 )
+
+var jwtSecret = os.Getenv("JWT_SECRET")
 
 // HashPassword hashes a password using bcrypt.
 func HashPassword(password string) (string, error) {
@@ -24,24 +27,56 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func GenerateJWTToken(user *dao.User) (string, error) {
+// func GenerateJWTToken(user *dao.User) (string, error) {
+// 	// Define the claims of the token
+// 	claims := jwt.MapClaims{
+// 		"ID":    user.ID,
+// 		"email": user.Email,
+// 		// Add any other claims you need
+// 		"exp": time.Now().Add(time.Hour * 24).Unix(), // Token expires after 24 hours
+// 	}
+// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+// 	// Sign the token with the secret key
+// 	tokenString, err := token.SignedString([]byte("xyz"))
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	return tokenString, nil
+// }
+
+func GenerateJWTToken(user *dao.User, roles []string) (string, error) {
 	// Define the claims of the token
 	claims := jwt.MapClaims{
 		"ID":    user.ID,
 		"email": user.Email,
-		// Add any other claims you need
-		"exp": time.Now().Add(time.Hour * 24).Unix(), // Token expires after 24 hours
+		"roles": roles,                                 // Include the roles in the token claims
+		"exp":   time.Now().Add(time.Hour * 24).Unix(), // Token expires after 24 hours
 	}
-
-	// Create a new token object, specifying signing method and the claims
-	// TODO: switch to SigningMethodES256 later for more security.
-	// ECDSA approach is more secure than using HS256 because it uses asymmetric encryption,
-	// which means the private key is used to sign the token, and the public key is used to verify it.
-	// This eliminates the need to securely share a secret key between the server and the client.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Sign the token with the secret key
-	tokenString, err := token.SignedString([]byte("xyz"))
+	tokenString, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func GenerateSpotifyJWTToken(user *dao.User, roles []string) (string, error) {
+	// Define the claims of the token
+	claims := jwt.MapClaims{
+		"ID":         user.ID,
+		"spotify_id": user.SpotifyID,
+		"roles":      roles,                                 // Include the roles in the token claims
+		"exp":        time.Now().Add(time.Hour * 24).Unix(), // Token expires after 24 hours
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token with the secret key
+	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
 		return "", err
 	}

@@ -14,6 +14,8 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/google/uuid"
+	userDTO "newnew.media/microservices/user/dto"
+	userService "newnew.media/microservices/user/service"
 )
 
 const REDIS_UNVERIFIED_EMAIL_PREFIX = "unverified"
@@ -22,10 +24,11 @@ type MailerService struct {
 	mailgun     mailgun.Mailgun
 	natsClient  *nats.Conn
 	redisClient *redis.Client
+	userService *userService.UserService
 }
 
-func NewMailerService(mailgun mailgun.Mailgun, natsClient *nats.Conn, redisClient *redis.Client) *MailerService {
-	return &MailerService{mailgun: mailgun, natsClient: natsClient, redisClient: redisClient}
+func NewMailerService(mailgun mailgun.Mailgun, natsClient *nats.Conn, redisClient *redis.Client, userService *userService.UserService) *MailerService {
+	return &MailerService{mailgun: mailgun, natsClient: natsClient, redisClient: redisClient, userService: userService}
 }
 
 func (ms *MailerService) StartVerification(c *fiber.Ctx, redisClient *redis.Client) error {
@@ -51,8 +54,23 @@ func (ms *MailerService) VerifyEmail(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(401).JSON(fiber.Map{"message": "Already verified."})
 	}
-	fmt.Println(email)
-	fmt.Println("Now you can update emailVerified column to true")
+
+	log.Printf("fetching user by their email >> [ %s ]\n", email)
+	user, err := ms.userService.GetUserByEmail(email)
+	if err != nil {
+		log.Printf("Error getting user by email [ %s ] \n", email)
+	}
+	user.EmailVerified = true
+
+	erro := ms.userService.UpdateUser(user.ID, user)
+	if erro != nil {
+		log.Printf("Error updating EmailVerified field for user >>  [ %s ] \n", user.ID.Hex())
+	}
+
+	rolerror := ms.userService.AddRole(user.ID, userDTO.Audience)
+	if rolerror != nil {
+		return c.Status(401).JSON(fiber.Map{"error": rolerror.Error()})
+	}
 
 	_, err = ms.redisClient.Del(context.Background(), fmt.Sprintf("%s:%s", REDIS_UNVERIFIED_EMAIL_PREFIX, token)).Result()
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	controller "newnew.media/microservices/communication/controller"
 	service "newnew.media/microservices/communication/service"
+	userService "newnew.media/microservices/user/service"
 )
 
 func CommunicationRoutes(app fiber.Router, redisClient *redis.Client, natsClient *nats.Conn) {
@@ -17,7 +18,7 @@ func CommunicationRoutes(app fiber.Router, redisClient *redis.Client, natsClient
 	var key string = os.Getenv("MAILGUN_APIKEY")
 
 	mailgun := mailgun.NewMailgun(domain, key)
-	mailerService := service.NewMailerService(mailgun, natsClient, redisClient)
+	mailerService := service.NewMailerService(mailgun, natsClient, redisClient, &userService.UserService{})
 
 	// Subscribe to user-registered subject
 	if err := mailerService.SubscribeToUserRegisteredSubject(); err != nil {
