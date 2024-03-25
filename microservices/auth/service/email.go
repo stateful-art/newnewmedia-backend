@@ -51,6 +51,7 @@ func (eas *EmailAuthService) LoginUser(email, password string) (string, error) {
 	if !CheckPasswordHash(password, user.Password) {
 		return "", errors.New("invalid password")
 	}
+
 	userRoles, err := eas.userService.GetUserRoles(user.ID)
 	if err != nil {
 		return "", err

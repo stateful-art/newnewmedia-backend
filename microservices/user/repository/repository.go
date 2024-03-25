@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	collections "newnew.media/db/collections"
 	dao "newnew.media/microservices/user/dao"
@@ -153,12 +154,11 @@ func (ur *UserRepository) GetUserByFavoritePlaces(places []primitive.ObjectID) (
 	return users, nil
 }
 
-// UpdateUser updates an existing user in the database.
-// UpdateUser updates an existing user in the database.
-func (ur *UserRepository) UpdateUser(id primitive.ObjectID, user dao.User) error {
+func (ur *UserRepository) UpdateUser(id primitive.ObjectID, updates map[string]interface{}) error {
 	filter := bson.M{"_id": id}
 
-	update := ur.generateUpdateQuery(user)
+	// Construct the update query using the provided updates map
+	update := bson.M{"$set": updates}
 
 	_, err := collections.UsersCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
@@ -167,6 +167,21 @@ func (ur *UserRepository) UpdateUser(id primitive.ObjectID, user dao.User) error
 
 	return nil
 }
+
+// UpdateUser updates an existing user in the database.
+// UpdateUser updates an existing user in the database.
+// func (ur *UserRepository) UpdateUser(id primitive.ObjectID, user dao.User) error {
+// 	filter := bson.M{"_id": id}
+
+// 	update := ur.generateUpdateQuery(user)
+
+// 	_, err := collections.UsersCollection.UpdateOne(context.Background(), filter, update)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 //
 
@@ -204,6 +219,49 @@ func (ur *UserRepository) generateUpdateQuery(user dao.User) bson.M {
 
 	return update
 }
+
+// func (ur *UserRepository) GetUserRoles(userID primitive.ObjectID) ([]dao.UserRole, error) {
+// 	var userRoles []dao.UserRole
+// 	filter := bson.M{"user_id": userID}
+
+// 	cursor, err := collections.UserRolesCollection.Find(context.Background(), filter)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer cursor.Close(context.Background())
+
+// 	if !cursor.Next(context.Background()) {
+// 		// No roles found for the user, return an empty slice
+// 		return []dao.UserRole{}, nil
+// 	}
+
+// 	err = cursor.Decode(&userRoles)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return userRoles, nil
+// }
+
+// func (ur *UserRepository) GetUserRoles(userID primitive.ObjectID) ([]dao.UserRole, error) {
+// 	var userRoles []dao.UserRole
+// 	filter := bson.M{"user_id": userID}
+
+// 	cursor, err := collections.UserRolesCollection.Find(context.Background(), filter)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer cursor.Close(context.Background())
+
+// 	// Use cursor.All to decode all matching documents into the userRoles slice
+// 	err = cursor.All(context.Background(), &userRoles)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return userRoles, nil
+// }
+
 func (ur *UserRepository) GetUserRoles(userID primitive.ObjectID) ([]dao.UserRole, error) {
 	var userRoles []dao.UserRole
 	filter := bson.M{"user_id": userID}
@@ -214,12 +272,8 @@ func (ur *UserRepository) GetUserRoles(userID primitive.ObjectID) ([]dao.UserRol
 	}
 	defer cursor.Close(context.Background())
 
-	if !cursor.Next(context.Background()) {
-		// No roles found for the user, return an empty slice
-		return []dao.UserRole{}, nil
-	}
-
-	err = cursor.Decode(&userRoles)
+	// Correctly decode all documents into the userRoles slice
+	err = cursor.All(context.Background(), &userRoles)
 	if err != nil {
 		return nil, err
 	}
@@ -228,11 +282,35 @@ func (ur *UserRepository) GetUserRoles(userID primitive.ObjectID) ([]dao.UserRol
 }
 
 // AddUserRole adds a role to the user.
+// func (ur *UserRepository) AddUserRole(userRole dao.UserRole) error {
+// 	_, err := collections.UserRolesCollection.InsertOne(context.Background(), userRole)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
 func (ur *UserRepository) AddUserRole(userRole dao.UserRole) error {
-	_, err := collections.UserRolesCollection.InsertOne(context.Background(), userRole)
+	// Check if the user already has the role
+	filter := bson.M{"user_id": userRole.UserID, "role": userRole.Role}
+	var existingRole dao.UserRole
+	err := collections.UserRolesCollection.FindOne(context.Background(), filter).Decode(&existingRole)
+	if err != nil && err != mongo.ErrNoDocuments {
+		// An error occurred that is not ErrNoDocuments, return the error
+		return err
+	}
+
+	// If the user already has the role, skip the insertion
+	if existingRole.UserID != (primitive.ObjectID{}) {
+		return nil
+	}
+
+	// If the user does not have the role, insert the new role
+	_, err = collections.UserRolesCollection.InsertOne(context.Background(), userRole)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

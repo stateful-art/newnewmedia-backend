@@ -13,22 +13,22 @@ import (
 func SearchRoutes(app fiber.Router, elasticClient *elasticsearch.Client, natsClient *nats.Conn) {
 	// Pass the PlaylistService instance to the PlaylistController
 
-	searchService := service.NewSearchService(elasticClient, natsClient)
+	searchService := service.NewSearchService(elasticClient)
 	indexService := service.NewIndexService(elasticClient, natsClient)
 	// Subscribe to user-registered subject
 	if err := indexService.SubscribeToPlaceCreatedSubject(); err != nil {
 		log.Fatalf("Failed to subscribe to user-registered subject: %v", err)
 	}
 
-	sic := controller.NewSearchIndexController(searchService, indexService)
+	searchIndexController := controller.NewSearchIndexController(searchService, indexService)
 
 	// Admin Index routes
-	// app.Post("/admin/create-index/:indexName", controller.CreateIndex)
-	// app.Delete("/admin/delete-index/:indexName", controller.DeleteIndex)
+	app.Post("/admin/create-index/:indexName", searchIndexController.CreateIndex)
+	app.Delete("/admin/delete-index/:indexName", searchIndexController.DeleteIndex)
 
 	// Place routes
-	app.Post("/index-place", sic.IndexPlace)
-	// app.Get("/place", controller.SearchPlaceByName)
+	app.Post("/index-place", searchIndexController.IndexPlace)
+	app.Get("/place", searchIndexController.SearchPlaceByName)
 	// app.Get("/place/prefix", controller.PrefixSearchPlaceByName)
 
 }

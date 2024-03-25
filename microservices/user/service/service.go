@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -43,16 +44,26 @@ func (s *UserService) CreateUser(user dto.CreateUserRequest) error {
 
 	if user.Email != "" {
 		newUser.Email = user.Email
-		err := utils.SendNATSmessage(s.natsClient, "user-registered", user.Email)
+		errChan := make(chan error, 1) // Create a channel to receive errors
 
+		go func() {
+			err := utils.SendNATSmessage(s.natsClient, "user-registered", []byte(user.Email))
+			if err != nil {
+				errChan <- err // Send the error to the channel
+			} else {
+				errChan <- nil // Send nil to indicate success
+			}
+		}()
+
+		err := <-errChan // Wait for the result from the goroutine
 		if err != nil {
 			newUser.EmailSent = false
+			log.Print("Failed to send msg to nats: ", err)
 			return errors.New("failed to send msg to nats")
 		} else {
 			newUser.EmailSent = true
 		}
 	}
-
 	// Create user in the repository
 	if err := s.userRepo.CreateUser(newUser); err != nil {
 		return err // Return error if user creation fails
@@ -89,8 +100,8 @@ func (s *UserService) GetUserByFavoritePlaces(places []primitive.ObjectID) ([]da
 	return s.userRepo.GetUserByFavoritePlaces(places)
 }
 
-func (s *UserService) UpdateUser(id primitive.ObjectID, user dao.User) error {
-	return s.userRepo.UpdateUser(id, user)
+func (s *UserService) UpdateUser(id primitive.ObjectID, updates map[string]interface{}) error {
+	return s.userRepo.UpdateUser(id, updates)
 }
 
 func (s *UserService) DeleteUser(id primitive.ObjectID) error {

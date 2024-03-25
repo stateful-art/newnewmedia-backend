@@ -37,6 +37,6 @@ func (cc *CommunicationController) VerifyEmail(c *fiber.Ctx) error {
 	}
 
 	log.Print("Email verification done. Redirecting to login page..")
-	c.Redirect(os.Getenv("WEBAPP_LOGIN_URL"), fiber.StatusContinue)
+	c.Redirect(os.Getenv("WEBAPP_LOGIN_URL"), fiber.StatusSeeOther)
 	return nil
 }

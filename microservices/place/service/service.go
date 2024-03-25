@@ -27,21 +27,18 @@ func (ps *PlaceService) CreatePlace(c *fiber.Ctx, place dto.Place) error {
 		return err
 	}
 
-	log.Print("marshaling place to index >>", place)
 	// Serialize the place struct to JSON
 	placeJSON, err := json.Marshal(place)
 	if err != nil {
 		log.Fatalf("Failed to serialize place to JSON: %v", err)
 	}
-	log.Print("marshalled place to index >>", placeJSON)
 
-	// Send the JSON over NATS
-	log.Print("Sending the JSON over NATS")
-	erro := utils.SendMsgToPlaceIndexer(ps.natsClient, "place-created", placeJSON)
-	if erro != nil {
-		log.Print("Failed to index place", err)
-	}
-	log.Print("SENT the JSON over NATS")
+	go func() {
+		err := utils.SendNATSmessage(ps.natsClient, "place-created", placeJSON)
+		if err != nil {
+			log.Print("Failed to index place: ", err)
+		}
+	}()
 
 	return nil
 }

@@ -1,13 +1,13 @@
 package service
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/gofiber/fiber/v2"
 	"github.com/nats-io/nats.go"
 	placeDTO "newnew.media/microservices/place/dto"
 )
@@ -21,59 +21,78 @@ func NewIndexService(elasticClient *elasticsearch.Client, natsClient *nats.Conn)
 	return &IndexService{elasticClient: elasticClient, natsClient: natsClient}
 }
 
-func (is *IndexService) CreateIndex(c *fiber.Ctx) error {
-	indexName := c.Params("indexName")
-	mapping := `
-	{
-	  "settings": {
-		"number_of_shards": 1,
-		"number_of_replicas": 1
-	  },
-	  "mappings": {
-		"properties": {
-		  "name": {
-			"type": "text"
-		  },
-		  "location": {
-			"type": "geo_point"
-		  }
-		}
-	  }
-	}`
+// func (is *IndexService) CreateIndex(indexName string, mapping []byte) error {
+// 	// indexName := c.Params("indexName")
+// 	// mapping := `
+// 	// {
+// 	//   "settings": {
+// 	// 	"number_of_shards": 1,
+// 	// 	"number_of_replicas": 1
+// 	//   },
+// 	//   "mappings": {
+// 	// 	"properties": {
+// 	// 	  "name": {
+// 	// 		"type": "text"
+// 	// 	  },
+// 	// 	  "location": {
+// 	// 		"type": "geo_point"
+// 	// 	  }
+// 	// 	}
+// 	//   }
+// 	// }`
 
-	// Create the index
+// 	// Create the index
+// 	res, err := is.elasticClient.Indices.Create(
+// 		indexName,
+// 		is.elasticClient.Indices.Create.WithBody(bytes.NewReader(mapping)),
+// 	)
+
+// 	if err != nil {
+// 		log.Fatalf("Error creating index: %s", err)
+// 		return err
+// 	}
+
+// 	if res.IsError() {
+// 		return err
+// 	}
+
+// 	return nil
+// }
+
+func (is *IndexService) CreateIndex(indexName string, mapping []byte) error {
+
+	// Create the index with the updated mapping
 	res, err := is.elasticClient.Indices.Create(
 		indexName,
-		is.elasticClient.Indices.Create.WithBody(strings.NewReader(mapping)),
+		is.elasticClient.Indices.Create.WithBody(bytes.NewReader(mapping)),
 	)
 
 	if err != nil {
 		log.Fatalf("Error creating index: %s", err)
-		return c.Status(500).SendString("Error creating index")
+		return err
 	}
 
 	if res.IsError() {
-		return c.Status(500).SendString("Error creating index")
+		return err
 	}
 
-	return c.SendString("Index created successfully")
+	return nil
 }
 
-func (is *IndexService) DeleteIndex(c *fiber.Ctx) error {
-	indexName := c.Params("indexName")
+func (is *IndexService) DeleteIndex(indexName string) error {
 	res, err := is.elasticClient.Indices.Delete([]string{indexName})
 
 	if err != nil {
 		log.Printf("Error deleting index: %s", err)
-		return c.Status(500).SendString("Error deleting index")
+		return err
 	}
 
 	if res.IsError() {
 		log.Printf("Error deleting index: %s", res.String())
-		return c.Status(500).SendString("Error deleting index")
+		return err
 	}
 
-	return c.SendString("Index deleted successfully")
+	return nil
 }
 
 func (is *IndexService) IndexPlace(place placeDTO.Place) error {
@@ -140,7 +159,7 @@ func (is *IndexService) SubscribeToPlaceCreatedSubject() error {
 		}
 	})
 	if err != nil {
-		return fmt.Errorf("Failed to subscribe to place-created subject: %v", err)
+		return fmt.Errorf("failed to subscribe to place-created subject: %v", err)
 	}
 	// defer sub.Unsubscribe()
 	return nil

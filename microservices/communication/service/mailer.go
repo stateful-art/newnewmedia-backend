@@ -55,27 +55,28 @@ func (ms *MailerService) VerifyEmail(c *fiber.Ctx) error {
 		return c.Status(401).JSON(fiber.Map{"message": "Already verified."})
 	}
 
-	log.Printf("fetching user by their email >> [ %s ]\n", email)
 	user, err := ms.userService.GetUserByEmail(email)
 	if err != nil {
 		log.Printf("Error getting user by email [ %s ] \n", email)
 	}
-	user.EmailVerified = true
 
-	erro := ms.userService.UpdateUser(user.ID, user)
+	updates := map[string]interface{}{
+		"email_verified": true,
+		"verified_at":    time.Now(),
+	}
+
+	erro := ms.userService.UpdateUser(user.ID, updates)
 	if erro != nil {
-		log.Printf("Error updating EmailVerified field for user >>  [ %s ] \n", user.ID.Hex())
+		log.Printf("Error updating email_verified field @ mongo >>  [ %s ] \n", user.ID.Hex())
 	}
 
 	rolerror := ms.userService.AddRole(user.ID, userDTO.Audience)
 	if rolerror != nil {
 		return c.Status(401).JSON(fiber.Map{"error": rolerror.Error()})
 	}
-
-	_, err = ms.redisClient.Del(context.Background(), fmt.Sprintf("%s:%s", REDIS_UNVERIFIED_EMAIL_PREFIX, token)).Result()
-	if err != nil {
-		return c.Status(401).JSON(fiber.Map{"message": "Error"})
-	}
+	go func() {
+		ms.redisClient.Del(context.Background(), fmt.Sprintf("%s:%s", REDIS_UNVERIFIED_EMAIL_PREFIX, token)).Result()
+	}()
 
 	return c.JSON(fiber.Map{
 		"message": fmt.Sprintf("Your email, %s is now verified", email),
