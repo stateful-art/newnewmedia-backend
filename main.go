@@ -204,13 +204,13 @@ func main() {
 	search := app.Group("/search")
 
 	authroute.AuthRoutes(auth, StorageClient, RedisClient, NatsClient)
-	placesroute.PlaceRoutes(places)
+	placesroute.PlaceRoutes(places, NatsClient)
 	musicroute.MusicRoutes(music, StorageClient, RedisClient)
 	playlistroute.PlaylistRoutes(playlists)
 	revenueroute.RevenueRoutes(revenues)
 	userroute.UserRoutes(users, RedisClient, NatsClient)
 	communicationroutes.CommunicationRoutes(communications, RedisClient, NatsClient)
-	searchroute.SearchRoutes(search, ElasticClient)
+	searchroute.SearchRoutes(search, ElasticClient, NatsClient)
 
 	// // below protected. Require an Authorization Bearer <token> to access.
 	// app.Use(authroute.JWTSignerMiddleware(os.Getenv("JWT_SECRET")))

@@ -10,7 +10,16 @@ import (
 	dto "newnew.media/microservices/place/dto"
 )
 
-func GetPlaces(c *fiber.Ctx) ([]dto.Place, error) {
+type PlaceRepository struct {
+	// Any fields or dependencies needed by the repository can be added here
+}
+
+// NewPlaceRepository creates a new instance of the PlaceRepository.
+func NewPlaceRepository() *PlaceRepository {
+	return &PlaceRepository{}
+}
+
+func (pr *PlaceRepository) GetPlaces(c *fiber.Ctx) ([]dto.Place, error) {
 	var places []dto.Place
 	cursor, err := collections.PlacesCollection.Find(context.Background(), bson.M{})
 	if err != nil {
@@ -25,7 +34,7 @@ func GetPlaces(c *fiber.Ctx) ([]dto.Place, error) {
 	return places, nil
 }
 
-func CreatePlace(c *fiber.Ctx, place dto.Place) error {
+func (pr *PlaceRepository) CreatePlace(c *fiber.Ctx, place dto.Place) error {
 	_, err := collections.PlacesCollection.InsertOne(context.Background(), place)
 	if err != nil {
 		return err
@@ -33,7 +42,7 @@ func CreatePlace(c *fiber.Ctx, place dto.Place) error {
 	return nil
 }
 
-func GetPlace(c *fiber.Ctx, placeObjId *primitive.ObjectID) (dto.Place, error) {
+func (pr *PlaceRepository) GetPlace(c *fiber.Ctx, placeObjId *primitive.ObjectID) (dto.Place, error) {
 	var place dto.Place
 	err := collections.PlacesCollection.FindOne(context.Background(), bson.M{"_id": placeObjId}).Decode(&place)
 	if err != nil {

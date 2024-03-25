@@ -32,16 +32,19 @@ type Link struct {
 }
 
 type Place struct {
-	ID          string   `json:"id,omitempty" bson:"_id,omitempty"`
-	Owner       string   `json:"owner,omitempty" bson:"owner,omitempty"`
-	Email       string   `json:"email"`
-	Phone       string   `json:"phone"`
-	SpotifyID   string   `json:"spotify_id"`
-	Name        string   `json:"name"`
-	Location    Location `json:"location"`
-	Description string   `json:"description"`
-	Image       string   `json:"image"`
-	Links       []Link   `json:"links"`
+	ID        string   `json:"id,omitempty" bson:"_id,omitempty"`
+	Owner     string   `json:"owner,omitempty" bson:"owner,omitempty"`
+	Email     string   `json:"email"`
+	Phone     string   `json:"phone"`
+	SpotifyID string   `json:"spotify_id" bson:"spotify_id"`
+	Name      string   `json:"name"`
+	Location  Location `json:"location"`
+	City      string   `json:"city"`
+	Country   string   `json:"country"`
+
+	Description string `json:"description"`
+	Image       string `json:"image"`
+	Links       []Link `json:"links"`
 }
 
 type RecentPlayItem struct {

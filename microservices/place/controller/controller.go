@@ -3,11 +3,19 @@ package controller
 import (
 	"github.com/gofiber/fiber/v2"
 	"newnew.media/microservices/place/dto"
-	services "newnew.media/microservices/place/service"
+	service "newnew.media/microservices/place/service"
 )
 
-func GetPlaces(c *fiber.Ctx) error {
-	places, err := services.GetPlaces(c)
+type PlaceController struct {
+	placeService *service.PlaceService
+}
+
+func NewPlaceController(placeService *service.PlaceService) *PlaceController {
+	return &PlaceController{placeService: placeService}
+}
+
+func (pc *PlaceController) GetPlaces(c *fiber.Ctx) error {
+	places, err := pc.placeService.GetPlaces(c)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"message": err.Error(),
@@ -19,14 +27,14 @@ func GetPlaces(c *fiber.Ctx) error {
 	})
 }
 
-func CreatePlace(c *fiber.Ctx) error {
+func (pc *PlaceController) CreatePlace(c *fiber.Ctx) error {
 	var payload dto.Place
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": err.Error(),
 		})
 	}
-	err := services.CreatePlace(c, payload)
+	err := pc.placeService.CreatePlace(c, payload)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": err.Error(),
@@ -37,9 +45,9 @@ func CreatePlace(c *fiber.Ctx) error {
 	})
 }
 
-func GetPlace(c *fiber.Ctx) error {
+func (pc *PlaceController) GetPlace(c *fiber.Ctx) error {
 	id := c.Params("id")
-	place, err := services.GetPlace(c, id)
+	place, err := pc.placeService.GetPlace(c, id)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"message": err.Error(),
