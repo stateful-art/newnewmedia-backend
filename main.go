@@ -19,6 +19,7 @@ import (
 	authroute "newnew.media/microservices/auth/routes"
 	communicationroutes "newnew.media/microservices/communication/routes"
 	musicroute "newnew.media/microservices/music/routes"
+	offerroute "newnew.media/microservices/offer/routes"
 	placesroute "newnew.media/microservices/place/routes"
 	playlistroute "newnew.media/microservices/playlist/routes"
 	revenueroute "newnew.media/microservices/revenue/routes"
@@ -202,6 +203,7 @@ func main() {
 	users := app.Group("/users")
 	communications := app.Group("/comms")
 	search := app.Group("/search")
+	offers := app.Group("/offers")
 
 	authroute.AuthRoutes(auth, StorageClient, RedisClient, NatsClient)
 	placesroute.PlaceRoutes(places, NatsClient)
@@ -211,6 +213,7 @@ func main() {
 	userroute.UserRoutes(users, RedisClient, NatsClient)
 	communicationroutes.CommunicationRoutes(communications, RedisClient, NatsClient)
 	searchroute.SearchRoutes(search, ElasticClient, NatsClient)
+	offerroute.OfferRoutes(offers, NatsClient)
 
 	// // below protected. Require an Authorization Bearer <token> to access.
 	// app.Use(authroute.JWTSignerMiddleware(os.Getenv("JWT_SECRET")))

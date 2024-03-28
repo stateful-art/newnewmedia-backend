@@ -1,0 +1,11 @@
+{
+  "songs": [
+    "65ff0fc996780b452aa1cb78",
+    "65ff0ff896780b452aa1cb7a",
+    "65ff126df9a21ca753144fd5"
+  ],
+  "artist_id": "6601f9a8b1839e9ed49bc5c3",
+  "place_id": "66019256792a0053d449952d",
+  "valid_until": "2023-04-30T23:59:59Z",
+  "preferences": ["public", "collective"]
+}

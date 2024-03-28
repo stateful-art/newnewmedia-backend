@@ -7,6 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // PrintError prints an error message
@@ -58,4 +59,28 @@ func ReceiveNATSmessage(natsClient *nats.Conn, subject string) error {
 	return nil
 	// // Wait indefinitely to keep the program running
 	// select {}
+}
+
+func ConvertStringsToObjectIDs(strings []string) ([]primitive.ObjectID, error) {
+	var objectIDs []primitive.ObjectID
+
+	for _, str := range strings {
+		objectID, err := primitive.ObjectIDFromHex(str)
+		if err != nil {
+			return nil, err
+		}
+		objectIDs = append(objectIDs, objectID)
+	}
+
+	return objectIDs, nil
+}
+
+func ConvertObjectIDsToString(objectIDs []primitive.ObjectID) []string {
+	var strings []string
+
+	for _, objectID := range objectIDs {
+		strings = append(strings, objectID.Hex())
+	}
+
+	return strings
 }
