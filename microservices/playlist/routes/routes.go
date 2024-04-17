@@ -20,7 +20,7 @@ func PlaylistRoutes(app fiber.Router) {
 	// Define routes using the controller methods
 	app.Get("/", playlistController.GetPlaylists)
 	app.Get("/:id", playlistController.GetPlaylistByID)
-	app.Get("/:owner_id", playlistController.GetPlaylistsByOwner)
+	app.Get("/owner/:id", playlistController.GetPlaylistsByOwner)
 
 	app.Post("/", playlistController.CreatePlaylist)
 	app.Patch("/:id", playlistController.UpdatePlaylist)

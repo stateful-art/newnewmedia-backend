@@ -1,8 +1,12 @@
 package service
 
 import (
+	"time"
+
+	"github.com/gofiber/fiber/v2/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"newnew.media/microservices/playlist/dao"
+	"newnew.media/microservices/playlist/dto"
 
 	"newnew.media/microservices/playlist/repository"
 )
@@ -15,8 +19,9 @@ func NewPlaylistService(playlistRepo *repository.PlaylistRepository) *PlaylistSe
 	return &PlaylistService{playlistRepo: playlistRepo}
 }
 
-func (s *PlaylistService) CreatePlaylist(playlist dao.Playlist) error {
-	return s.playlistRepo.CreatePlaylist(playlist)
+func (s *PlaylistService) CreatePlaylist(playlist dto.CreatePlaylist) error {
+	newPlaylist := ConvertPlaylistDTOToDAO(playlist)
+	return s.playlistRepo.CreatePlaylist(*newPlaylist)
 }
 
 func (s *PlaylistService) GetPlaylistByID(id primitive.ObjectID) (dao.Playlist, error) {
@@ -90,4 +95,67 @@ func (s *PlaylistService) RemoveSongsFromPlaylist(playlistID primitive.ObjectID,
 	}
 
 	return nil
+}
+
+func ConvertPlaylistDTOToDAO(playlist dto.CreatePlaylist) *dao.Playlist {
+
+	ownerID, err := primitive.ObjectIDFromHex(playlist.Owner)
+	if err != nil {
+		log.Error("owner id not valid.")
+	}
+	songs := ConvertSongDTOToDAO(playlist.Songs)
+	return &dao.Playlist{
+		ID:                   primitive.NilObjectID, // Will be generated automatically by MongoDB
+		Name:                 playlist.Name,
+		Description:          playlist.Description,
+		Owner:                ownerID, // Update with actual owner ID from authentication
+		Type:                 dao.PlaylistType(playlist.Type),
+		RevenueSharingModel:  dao.RevenueSharingModel(playlist.RevenueSharingModel),
+		RevenueCutPercentage: playlist.RevenueCutPercentage,
+		Songs:                songs,
+		CreatedAt:            time.Now(),
+		UpdatedAt:            time.Now(),
+	}
+}
+
+func ConvertPlaylistDAOToDTO(playlist dao.Playlist) *dto.GetPlaylist {
+	songs := ConvertSongDAOToDTO(playlist.Songs)
+	return &dto.GetPlaylist{
+		ID:                   playlist.ID.Hex(),
+		Name:                 playlist.Name,
+		Description:          playlist.Description,
+		Owner:                playlist.Owner.Hex(),
+		Type:                 dto.PlaylistType(playlist.Type),
+		RevenueSharingModel:  dto.RevenueSharingModel(playlist.RevenueSharingModel),
+		RevenueCutPercentage: playlist.RevenueCutPercentage,
+		Songs:                songs,
+	}
+}
+
+func ConvertSongDTOToDAO(songs []dto.Song) []dao.Song {
+	var daoSongs []dao.Song
+	for _, song := range songs {
+		daoSong := dao.Song{
+			ID:        primitive.NilObjectID, // Will be generated automatically by MongoDB
+			Name:      song.Name,
+			Artist:    primitive.NilObjectID, // Update with actual artist ID from your database
+			PlayCount: song.PlayCount,
+		}
+		daoSongs = append(daoSongs, daoSong)
+	}
+	return daoSongs
+}
+
+func ConvertSongDAOToDTO(songs []dao.Song) []dto.Song {
+	var dtoSongs []dto.Song
+	for _, song := range songs {
+		dtoSong := dto.Song{
+			ID:        song.ID.Hex(), // Will be generated automatically by MongoDB
+			Name:      song.Name,
+			Artist:    song.Artist.Hex(), // Update with actual artist ID from your database
+			PlayCount: song.PlayCount,
+		}
+		dtoSongs = append(dtoSongs, dtoSong)
+	}
+	return dtoSongs
 }

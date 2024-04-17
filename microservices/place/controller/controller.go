@@ -21,10 +21,7 @@ func (pc *PlaceController) GetPlaces(c *fiber.Ctx) error {
 			"message": err.Error(),
 		})
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Places Successfully Fetched",
-		"data":    places,
-	})
+	return c.Status(fiber.StatusOK).JSON(places)
 }
 
 func (pc *PlaceController) CreatePlace(c *fiber.Ctx) error {

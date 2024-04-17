@@ -24,7 +24,6 @@ func NewPlaylistRepository() *PlaylistRepository {
 
 // CreatePlaylist inserts a new playlist into the database.
 func (pr *PlaylistRepository) CreatePlaylist(playlist dao.Playlist) error {
-	playlist.ID = primitive.NewObjectID()
 	playlist.CreatedAt = time.Now()
 	playlist.UpdatedAt = time.Now()
 

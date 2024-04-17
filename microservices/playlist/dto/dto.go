@@ -1,17 +1,15 @@
-package dao
+package dto
 
 import (
-	"time"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"newnew.media/microservices/playlist/dao"
 )
 
 type Song struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Name      string             `json:"name,omitempty" bson:"name,omitempty"`
-	ArtistID  primitive.ObjectID `json:"artist_id,omitempty" bson:"artist_id,omitempty"`
-	PlayCount int16              `json:"play_count,omitempty" bson:"play_count,omitempty"`
+	ID        string `json:"id,omitempty" bson:"id,omitempty"`
+	Name      string `json:"name,omitempty" bson:"name,omitempty"`
+	Artist    string `json:"artist,omitempty" bson:"artist_id,omitempty"`
+	PlayCount int16  `json:"play_count,omitempty" bson:"play_count,omitempty"`
 }
 
 type PlaylistType string
@@ -28,8 +26,7 @@ const (
 	IndividualSharing RevenueSharingModel = "individual"
 )
 
-type Playlist struct {
-	ID                   primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
+type CreatePlaylist struct {
 	Name                 string              `json:"name,omitempty" bson:"name,omitempty"`
 	Description          string              `json:"description,omitempty" bson:"description,omitempty"`
 	Owner                string              `json:"owner,omitempty" bson:"owner,omitempty"`
@@ -37,8 +34,19 @@ type Playlist struct {
 	RevenueSharingModel  RevenueSharingModel `json:"revenue_sharing_model,omitempty" bson:"revenue_sharing_model,omitempty"`
 	RevenueCutPercentage float64             `json:"revenue_cut_percentage,omitempty" bson:"revenue_cut_percentage,omitempty"`
 	Songs                []Song              `json:"songs,omitempty" bson:"songs,omitempty"`
-	CreatedAt            time.Time           `json:"created_at,omitempty" bson:"created_at,omitempty"`
-	UpdatedAt            time.Time           `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
+}
+
+type GetPlaylist struct {
+	ID                   string              `json:"_id,omitempty" bson:"_id,omitempty"`
+	Name                 string              `json:"name,omitempty" bson:"name,omitempty"`
+	Description          string              `json:"description,omitempty" bson:"description,omitempty"`
+	Owner                string              `json:"owner,omitempty" bson:"owner,omitempty"`
+	Type                 PlaylistType        `json:"type,omitempty" bson:"type,omitempty"`
+	RevenueSharingModel  RevenueSharingModel `json:"revenue_sharing_model,omitempty" bson:"revenue_sharing_model,omitempty"`
+	RevenueCutPercentage float64             `json:"revenue_cut_percentage,omitempty" bson:"revenue_cut_percentage,omitempty"`
+	Songs                []Song              `json:"songs,omitempty" bson:"songs,omitempty"`
+	CreatedAt            string              `json:"created_at,omitempty" bson:"created_at,omitempty"`
+	UpdatedAt            string              `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 }
 
 type RevenueCalculateRequest struct {

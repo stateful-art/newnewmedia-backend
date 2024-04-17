@@ -17,7 +17,7 @@ func NewPlaylistController(playlistService *service.PlaylistService) *PlaylistCo
 }
 
 func (c *PlaylistController) CreatePlaylist(ctx *fiber.Ctx) error {
-	var playlist dao.Playlist
+	var playlist dto.CreatePlaylist
 	if err := ctx.BodyParser(&playlist); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request payload"})
 	}
@@ -56,7 +56,7 @@ func (c *PlaylistController) GetPlaylists(ctx *fiber.Ctx) error {
 
 // GetPlaylistsByOwner retrieves playlists by their owner's ID.
 func (c *PlaylistController) GetPlaylistsByOwner(ctx *fiber.Ctx) error {
-	ownerID := ctx.Params("owner_id") // Replace with the actual parameter name for owner ID in the route
+	ownerID := ctx.Params("id") // Replace with the actual parameter name for owner ID in the route
 	objectID, err := primitive.ObjectIDFromHex(ownerID)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid owner ID"})

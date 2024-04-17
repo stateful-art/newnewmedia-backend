@@ -48,6 +48,28 @@ func (oc *OfferController) GetOfferByID(ctx *fiber.Ctx) error {
 	return ctx.JSON(offer)
 }
 
+// GetOffersByArtist handles getting offers by artist ID.
+func (oc *OfferController) GetOffersByArtist(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	offers, err := oc.offerService.GetOffersByArtist(ctx.Context(), id)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return ctx.JSON(offers)
+}
+
+// GetOffersByPlace handles getting offers by place ID.
+func (oc *OfferController) GetOffersByPlace(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	offers, err := oc.offerService.GetOffersByPlace(ctx.Context(), id)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return ctx.JSON(offers)
+}
+
 // UpdateOfferStatus handles updating an offer's status.
 func (oc *OfferController) UpdateOfferStatus(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
@@ -75,61 +97,19 @@ func (oc *OfferController) DeleteOffer(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusOK)
 }
 
-// CreateCounterOffer handles creating a new counter offer.
-func (oc *OfferController) CreateCounterOffer(ctx *fiber.Ctx) error {
-	var dto dto.CreateCounterOffer
-	if err := ctx.BodyParser(&dto); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
-	}
-
-	counter, err := oc.offerService.CreateCounterOffer(context.Background(), &dto)
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create counter offer"})
-	}
-
-	return ctx.Status(fiber.StatusCreated).JSON(counter)
-}
-
-// GetCounterOfferByID handles getting a counter offer by its ID.
-func (oc *OfferController) GetCounterOfferByID(ctx *fiber.Ctx) error {
-	id := ctx.Params("id")
-	counter, err := oc.offerService.GetCounterOfferByID(context.Background(), id)
-	if err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Counter offer not found"})
-	}
-
-	return ctx.JSON(counter)
-}
-
-// UpdateCounterOfferStatus handles updating a counter offer's status.
-func (oc *OfferController) UpdateCounterOfferStatus(ctx *fiber.Ctx) error {
-	id := ctx.Params("id")
-	var dto dto.UpdateOfferStatus
-	if err := ctx.BodyParser(&dto); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
-	}
-
-	err := oc.offerService.UpdateCounterOfferStatus(context.Background(), id, dto.Status)
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update counter offer status"})
-	}
-
-	return ctx.SendStatus(fiber.StatusOK)
-}
-
 func (oc *OfferController) CheckOfferValidity() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Try to extract the offer ID from the URL parameters
 		offerID := ctx.Params("id")
 
 		// If the offer ID is not in the URL parameters, try to extract it from the request body
-		if offerID == "" {
-			var dto dto.CreateCounterOffer
-			if err := ctx.BodyParser(&dto); err != nil {
-				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
-			}
-			offerID = dto.OfferID
-		}
+		// if offerID == "" {
+		// 	var dto dto.CreateCounterOffer
+		// 	if err := ctx.BodyParser(&dto); err != nil {
+		// 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
+		// 	}
+		// 	offerID = dto.OfferID
+		// }
 
 		// Fetch the offer from the database
 		offer, err := oc.offerService.GetOfferByID(context.Background(), offerID)

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -14,8 +15,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
+
 	utils "newnew.media/commons/utils"
 	db "newnew.media/db"
+
 	authroute "newnew.media/microservices/auth/routes"
 	communicationroutes "newnew.media/microservices/communication/routes"
 	musicroute "newnew.media/microservices/music/routes"
@@ -37,33 +40,24 @@ func init() {
 		log.Fatalf("Error loading environment variables: %v", err)
 	}
 
-	// log.Print("SENDING EMAIL w MAILGUN...")
-
-	// commservice.SendEmail()
-
 	_, err := db.ConnectDB()
 	if err != nil {
 		log.Fatalf("Error connecting to MongoDB: %v", err)
 	}
 
-	// Initialize Google Cloud Storage client
-	initGoogleCloudStorage()
+	wg := sync.WaitGroup{}
+	wg.Add(4)
 
-	// Initialize Redis client
-	initRedis()
+	go initGoogleCloudStorage(&wg)
+	go initRedis(&wg)
+	go initNATS(&wg)
+	go initElastic(&wg)
 
-	// Initialize NATS connection
-	initNATS()
-
-	// Initialize Elasticsearch client
-	initElastic()
+	wg.Wait()
 }
 
-func initGoogleCloudStorage() {
-	// Set the path to your credentials file
+func initGoogleCloudStorage(wg *sync.WaitGroup) {
 	credentialsFile := filepath.FromSlash("creds/creds.json")
-
-	// Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", credentialsFile)
 
 	ctx := context.Background()
@@ -74,9 +68,11 @@ func initGoogleCloudStorage() {
 	}
 	StorageClient = client
 	log.Println("Google Storage: OK")
+	wg.Done()
+
 }
 
-func initRedis() {
+func initRedis(wg *sync.WaitGroup) {
 	redisCtx := context.Background()
 	var redisErr error
 	for attempt := 1; attempt <= 3; attempt++ {
@@ -91,9 +87,11 @@ func initRedis() {
 	if redisErr != nil {
 		log.Fatalf("Failed to connect to Redis after multiple attempts: %v", redisErr)
 	}
+	wg.Done()
+
 }
 
-func initNATS() {
+func initNATS(wg *sync.WaitGroup) {
 	natsOpts := nats.Options{
 		Servers: []string{os.Getenv("NATS_ADDRESS")},
 	}
@@ -105,44 +103,12 @@ func initNATS() {
 	}
 
 	log.Println("connected to NATS")
+	wg.Done()
+
 	// defer NatsClient.Close()
 }
 
-// func initElastic() {
-// 	// Read the ELASTICSEARCH_URL from the environment variable
-// 	elasticsearchURL := os.Getenv("ELASTICSEARCH_URL")
-// 	if elasticsearchURL == "" {
-// 		log.Fatal("ELASTICSEARCH_URL environment variable is not set")
-// 	}
-
-// 	// Load the CA certificate
-// 	caCertPool, e := loadCA("/certs/elasticsearch.crt")
-// 	if e != nil {
-// 		log.Fatalf("Failed to load CA certificate: %s", e)
-// 	}
-
-// 	// Initialize the Elasticsearch client with the URL from the environment variable
-// 	cfg := elasticsearch.Config{
-// 		Addresses: []string{
-// 			elasticsearchURL,
-// 		},
-// 		Transport: &http.Transport{
-// 			TLSClientConfig: &tls.Config{
-// 				RootCAs: caCertPool,
-// 			},
-// 		},
-// 	}
-
-// 	var err error
-// 	ElasticClient, err = elasticsearch.NewClient(cfg)
-// 	if err != nil {
-// 		log.Fatalf("Error creating the elastic client: %s", err)
-// 	}
-// 	log.Println("Created Elastic client")
-// }
-
-func initElastic() {
-	// Read the ELASTICSEARCH_URL from the environment variable
+func initElastic(wg *sync.WaitGroup) {
 	elasticsearchURL := os.Getenv("ELASTICSEARCH_URL")
 	elasticsearchUsername := os.Getenv("ELASTICSEARCH_USERNAME")
 	elasticsearchPassword := os.Getenv("ELASTICSEARCH_PASSWORD")
@@ -151,7 +117,6 @@ func initElastic() {
 		log.Fatal("ELASTICSEARCH_URL environment variable is not set")
 	}
 
-	// Initialize the Elasticsearch client with the URL from the environment variable
 	cfg := elasticsearch.Config{
 		Addresses: []string{
 			elasticsearchURL,
@@ -165,6 +130,7 @@ func initElastic() {
 		log.Fatalf("Error creating the elastic client: %s", err)
 	}
 	log.Println("Created Elastic client with basic authentication")
+	wg.Done()
 }
 
 // func loadCA(caCertPath string) (*x509.CertPool, error) {
@@ -183,8 +149,8 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		// AllowOrigins:     "*",
-		AllowOrigins:     "http://localhost:5173",
+		AllowOrigins: "*",
+		// AllowOrigins:     "http://localhost:5173",
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders:     "x-jwt,x-spotify-id,x-spotify-token,Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin,Access-Control-Allow-Credentials",
 		ExposeHeaders:    "Content-Length,Access-Control-Allow-Headers,Access-Control-Allow-Credentials",
