@@ -18,12 +18,11 @@ func OfferRoutes(app fiber.Router, natsClient *nats.Conn) {
 	controller := controller.NewOfferController(service)
 
 	app.Get("/:id", controller.GetOfferByID)
+	app.Get("/artist/:id", controller.GetOffersByArtist)
+	app.Get("/place/:id", controller.GetOffersByPlace)
+
 	app.Post("/", controller.CreateOffer)
 	app.Patch("/:id", controller.UpdateOfferStatus)
 	app.Delete("/:id", controller.DeleteOffer)
-
-	app.Get("/counter/:id", controller.GetCounterOfferByID)
-	app.Post("/counter", controller.CheckOfferValidity(), controller.CreateCounterOffer)
-	app.Patch("/counter/:id", controller.CheckOfferValidity(), controller.UpdateCounterOfferStatus)
 
 }

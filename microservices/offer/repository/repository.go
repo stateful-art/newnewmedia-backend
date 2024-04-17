@@ -11,14 +11,12 @@ import (
 )
 
 type OfferRepositoryImpl struct {
-	offersCollection        *mongo.Collection
-	counterOffersCollection *mongo.Collection
+	offersCollection *mongo.Collection
 }
 
 func NewMongoOfferRepository(db *mongo.Database) *OfferRepositoryImpl {
 	return &OfferRepositoryImpl{
-		offersCollection:        collections.OffersCollection,
-		counterOffersCollection: collections.CounterOffersCollection,
+		offersCollection: collections.OffersCollection,
 	}
 }
 
@@ -40,53 +38,60 @@ func (r *OfferRepositoryImpl) GetOfferByID(ctx context.Context, id primitive.Obj
 	return &offer, nil
 }
 
+func (r *OfferRepositoryImpl) GetOffersByPlace(ctx context.Context, place primitive.ObjectID) ([]*dao.Offer, error) {
+	var offers []*dao.Offer // Change to slice of pointers
+	cursor, err := r.offersCollection.Find(ctx, bson.M{"place": place})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	// Iterate through the cursor and decode each document into the offers slice
+	for cursor.Next(ctx) {
+		var offer dao.Offer
+		if err := cursor.Decode(&offer); err != nil {
+			return nil, err
+		}
+		offers = append(offers, &offer) // Append a pointer to the offer
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return offers, nil
+}
+
+func (r *OfferRepositoryImpl) GetOffersByArtist(ctx context.Context, artist primitive.ObjectID) ([]*dao.Offer, error) {
+	var offers []*dao.Offer // Change to slice of pointers
+	cursor, err := r.offersCollection.Find(ctx, bson.M{"artist": artist})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	// Iterate through the cursor and decode each document into the offers slice
+	for cursor.Next(ctx) {
+		var offer dao.Offer
+		if err := cursor.Decode(&offer); err != nil {
+			return nil, err
+		}
+		offers = append(offers, &offer) // Append a pointer to the offer
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return offers, nil
+}
+
 func (r *OfferRepositoryImpl) UpdateOfferStatus(ctx context.Context, id primitive.ObjectID, status dao.Status) error {
 	_, err := r.offersCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"status": status}})
 	return err
 }
 
-func (r *OfferRepositoryImpl) UpdateOfferWithCounterOffer(ctx context.Context, offerID primitive.ObjectID, counterOffer *dao.CounterOffer) error {
-	offer, err := r.GetOfferByID(ctx, offerID)
-	if err != nil {
-		return err
-	}
-
-	offer.CounterOffers = append(offer.CounterOffers, *counterOffer)
-
-	filter := bson.M{"_id": offerID}
-	update := bson.M{"$set": bson.M{"counter_offers": offer.CounterOffers}}
-	_, err = r.offersCollection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (r *OfferRepositoryImpl) DeleteOffer(ctx context.Context, id primitive.ObjectID) error {
 	_, err := r.offersCollection.DeleteOne(ctx, bson.M{"_id": id})
-	return err
-}
-
-func (r *OfferRepositoryImpl) CreateCounterOffer(ctx context.Context, counter *dao.Counter) (*dao.Counter, error) {
-	result, err := r.counterOffersCollection.InsertOne(ctx, counter)
-	if err != nil {
-		return nil, err
-	}
-	counter.ID = result.InsertedID.(primitive.ObjectID)
-	return counter, nil
-}
-
-func (r *OfferRepositoryImpl) GetCounterOfferByID(ctx context.Context, id primitive.ObjectID) (*dao.Counter, error) {
-	var counter dao.Counter
-	err := r.counterOffersCollection.FindOne(ctx, bson.M{"_id": id}).Decode(&counter)
-	if err != nil {
-		return nil, err
-	}
-	return &counter, nil
-}
-
-func (r *OfferRepositoryImpl) UpdateCounterOfferStatus(ctx context.Context, id primitive.ObjectID, status dao.Status) error {
-	_, err := r.counterOffersCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"status": status}})
 	return err
 }
