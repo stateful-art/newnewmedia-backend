@@ -21,6 +21,15 @@ func NewPlaceService(placeRepo *repository.PlaceRepository, natsClient *nats.Con
 	return &PlaceService{placeRepo: placeRepo, natsClient: natsClient}
 }
 
+func (ps *PlaceService) CreateGeospatialIndex() error {
+	log.Print("creating geospatial index")
+	err := ps.placeRepo.CreateGeospatialIndex()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (ps *PlaceService) CreatePlace(c *fiber.Ctx, place dto.Place) error {
 	err := ps.placeRepo.CreatePlace(c, place)
 	if err != nil {
@@ -58,6 +67,14 @@ func (ps *PlaceService) GetPlace(c *fiber.Ctx, id string) (dto.Place, error) {
 
 func (ps *PlaceService) GetPlaces(c *fiber.Ctx) ([]dto.Place, error) {
 	places, err := ps.placeRepo.GetPlaces(c)
+	if err != nil {
+		return nil, err
+	}
+	return places, nil
+}
+
+func (ps *PlaceService) GetPlacesNearLocation(c *fiber.Ctx, lat float64, long float64) ([]dto.Place, error) {
+	places, err := ps.placeRepo.GetPlacesNearLocation(c, lat, long)
 	if err != nil {
 		return nil, err
 	}

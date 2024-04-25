@@ -101,18 +101,22 @@ func ConvertPlaylistDTOToDAO(playlist dto.CreatePlaylist) *dao.Playlist {
 
 	ownerID, err := primitive.ObjectIDFromHex(playlist.Owner)
 	if err != nil {
-		log.Error("owner id not valid.")
+		log.Error("owner id is not valid.")
 	}
 	songs := ConvertSongDTOToDAO(playlist.Songs)
 	return &dao.Playlist{
-		ID:                   primitive.NilObjectID, // Will be generated automatically by MongoDB
-		Name:                 playlist.Name,
-		Description:          playlist.Description,
-		Owner:                ownerID, // Update with actual owner ID from authentication
-		Type:                 dao.PlaylistType(playlist.Type),
+		ID:          primitive.NilObjectID, // Will be generated automatically by MongoDB
+		Name:        playlist.Name,
+		Description: playlist.Description,
+		Owner:       ownerID, // Update with actual owner ID from authentication
+		Source:      dao.ContentSource(playlist.Source),
+		Type:        dao.PlaylistType(playlist.Type),
+
 		RevenueSharingModel:  dao.RevenueSharingModel(playlist.RevenueSharingModel),
 		RevenueCutPercentage: playlist.RevenueCutPercentage,
 		Songs:                songs,
+		Url:                  playlist.Url,
+		Image:                playlist.Image,
 		CreatedAt:            time.Now(),
 		UpdatedAt:            time.Now(),
 	}
@@ -126,9 +130,12 @@ func ConvertPlaylistDAOToDTO(playlist dao.Playlist) *dto.GetPlaylist {
 		Description:          playlist.Description,
 		Owner:                playlist.Owner.Hex(),
 		Type:                 dto.PlaylistType(playlist.Type),
+		Source:               dto.ContentSource(playlist.Source),
 		RevenueSharingModel:  dto.RevenueSharingModel(playlist.RevenueSharingModel),
 		RevenueCutPercentage: playlist.RevenueCutPercentage,
 		Songs:                songs,
+		Url:                  playlist.Url,
+		Image:                playlist.Image,
 	}
 }
 
