@@ -39,6 +39,39 @@ services:
     networks:
       - redis-network  # Assign the Redis service to the redis-network
 
+  nats-alpine:  # Define a new service for NATS Alpine
+    image: nats:alpine
+    ports:
+      - "4222:4222"  # Expose port 4222 for NATS
+    restart: always
+    networks:
+      - nats-network
+    
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - network.host=0.0.0.0
+      # - bootstrap.memory_lock=true
+      # - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=asdfxxxyyy
+    # ulimits:
+    #   memlock:
+    #     soft: -1
+    #     hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - elastic-network
+    
+
   backend_fiber:
     image: golang:1.21.0-alpine
     build: .
@@ -53,11 +86,14 @@ services:
     expose:
       - "3000"
     depends_on:
-      - letsencrypt
       - redis-alpine  # Specify Redis Alpine as a dependency
+      - nats-alpine
+      - elasticsearch
     networks:
       - proxy
       - redis-network  # Connect the backend_fiber service to the redis-network
+      - elastic-network
+      - nats-network
 
 volumes:
   conf:
@@ -66,9 +102,12 @@ volumes:
   dhparam:
   certs:
   redis_data:
+  esdata:
 
 networks:
   proxy:
     external:
       name: nginx-proxyy
-  redis-network:
+  redis-network:  # Define a new network for Redis
+  elastic-network:
+  nats-network:
